@@ -20,51 +20,115 @@ const TIPOS = [
   { value: 'indicacao', label: 'Indicação de Petição' },
 ]
 const TIPO_LABEL = Object.fromEntries(TIPOS.map(t => [t.value, t.label]))
-const AREAS = ['Cível', 'Trabalhista', 'Previdenciário', 'Criminal', 'Tributário', 'Administrativo', 'Empresarial', 'Família', 'Consumidor', 'Outro']
-// Subáreas por área (como na Facilita). Área sem lista → texto livre.
+
+const AREAS = ['Trabalhista', 'Previdenciário', 'Criminal', 'Administrativo', 'Cível', 'Tributário', 'Ambiental', 'Eleitoral']
+const UFS = ['AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA', 'MT', 'MS', 'MG', 'PA', 'PB', 'PR', 'PE', 'PI', 'RJ', 'RN', 'RS', 'RO', 'RR', 'SC', 'SP', 'SE', 'TO']
+
 const SUBAREAS = {
-  'Cível': ['Consumidor', 'Obrigações', 'Contratual', 'Responsabilidade Civil', 'Sucessões', 'Família', 'Possessória', 'Imobiliário', 'Empresarial'],
-  'Trabalhista': ['Verbas Rescisórias', 'Horas Extras', 'Reconhecimento de Vínculo', 'Acidente de Trabalho', 'Assédio Moral', 'Adicional (Insalubridade/Periculosidade)', 'FGTS'],
-  'Previdenciário': ['Aposentadoria', 'Auxílio-Doença', 'Auxílio-Acidente', 'BPC/LOAS', 'Pensão por Morte', 'Revisão de Benefício'],
-  'Criminal': ['Crimes contra a Pessoa', 'Crimes contra o Patrimônio', 'Tráfico de Drogas', 'Crimes contra a Honra', 'Habeas Corpus', 'Violência Doméstica'],
-  'Tributário': ['Execução Fiscal', 'Restituição/Compensação', 'ICMS', 'ISS', 'IPTU', 'Parcelamento'],
-  'Administrativo': ['Servidor Público', 'Licitações e Contratos', 'Improbidade', 'Concurso Público', 'Responsabilidade do Estado'],
-  'Empresarial': ['Societário', 'Contratos Empresariais', 'Recuperação/Falência', 'Propriedade Intelectual', 'Cobrança'],
-  'Família': ['Divórcio', 'Guarda', 'Alimentos', 'União Estável', 'Inventário/Partilha', 'Investigação de Paternidade'],
-  'Consumidor': ['Vício do Produto/Serviço', 'Cobrança Indevida', 'Inscrição Indevida', 'Plano de Saúde', 'Telefonia/Internet', 'Bancário'],
+  'Cível': ['Consumidor', 'Obrigações', 'Contratuais', 'Sucessões', 'Empresarial', 'Possessórias', 'Imobiliário', 'Responsabilidade Civil', 'Família'],
 }
 
-// Tipos de parte por serviço (Parecer usa Parte 1 / Parte 2, como na Facilita).
-const TIPOS_PARTE_POR_SERVICO = {
-  peticao:   ['Autor', 'Réu', 'Terceiro Interessado', 'Outro'],
-  contrato:  ['Contratante', 'Contratada', 'Interveniente', 'Outro'],
-  parecer:   ['Parte 1', 'Parte 2'],
-  indicacao: ['Autor', 'Réu', 'Outro'],
+const COMPETENCIAS = ['Justiça Estadual', 'Justiça Federal', 'Justiça do Trabalho', 'Juizado Especial Cível', 'Juizado Especial Federal', 'Justiça Eleitoral']
+const TIPOS_PETICAO = ['Inicial', 'Contestação', 'Manifestação', 'Recursos', 'Contrarrazões']
+const PETICAO_PUBLICACAO = ['Manifestação', 'Recursos', 'Contrarrazões']
+const PETICAO_GRATUITA_2N = ['Recursos', 'Contrarrazões']
+
+// Tipos de parte por serviço (Parecer usa Parte 01/02 fixas).
+const PARTES = {
+  peticao:   { modo: 'dinamica', tipos: ['Autor', 'Réu', 'Terceiro Interessado', 'Outro'] },
+  contrato:  { modo: 'dinamica', tipos: ['Contratante', 'Contratada', 'Interveniente', 'Outro'] },
+  indicacao: { modo: 'dinamica', tipos: ['Autor', 'Réu', 'Outro'] },
+  parecer:   { modo: 'fixa2' },
 }
-const tiposParte = (servico) => TIPOS_PARTE_POR_SERVICO[servico] || ['Parte 1', 'Parte 2']
 
-// Petições de resposta — fazem sentido perguntar sobre citação/tempestividade.
-const PETICOES_COM_CITACAO = ['Contestação', 'Manifestação', 'Recurso', 'Contrarrazões', 'Embargos de Declaração']
+const SIM_NAO = ['Sim', 'Não']
 
-// Campos que aparecem conforme o serviço escolhido (como na Facilita).
-const CAMPOS_SERVICO = {
-  peticao: [
-    { key: 'tipo_peticao', label: 'Tipo de petição', type: 'select', required: true,
-      options: ['Inicial', 'Contestação', 'Réplica', 'Manifestação', 'Recurso', 'Contrarrazões', 'Embargos de Declaração', 'Petição Intercorrente'] },
-    { key: 'numero_processo', label: 'Número do processo (se houver)', type: 'text', placeholder: '0000000-00.0000.0.00.0000' },
-    { key: 'houve_citacao', label: 'Houve citação do réu?', type: 'radio', options: ['Sim', 'Não'],
-      showIf: (c) => PETICOES_COM_CITACAO.includes(c.tipo_peticao) },
-    { key: 'data_citacao', label: 'Data da citação do réu', type: 'date', hint: 'Usada para calcular a tempestividade.',
-      showIf: (c) => c.houve_citacao === 'Sim' && PETICOES_COM_CITACAO.includes(c.tipo_peticao) },
-  ],
-  parecer: [],
-  contrato: [
-    { key: 'tipo_contrato', label: 'Tipo de contrato', type: 'select',
-      options: ['Prestação de Serviços', 'Compra e Venda', 'Locação', 'Confidencialidade (NDA)', 'Sociedade', 'Honorários Advocatícios', 'Distrato', 'Outro'] },
-  ],
-  indicacao: [
-    { key: 'numero_processo', label: 'Número do processo (opcional)', type: 'text', placeholder: 'Se aplicável' },
-  ],
+// ── Campos do passo "Serviço" (dados do processo, condicionais) ────────────────
+function camposServico(tipo, campos) {
+  if (tipo === 'peticao') {
+    const tp = campos.tipo_peticao
+    const f = [
+      { key: 'tipo_peticao', label: 'Tipo de petição', type: 'select', required: true, options: TIPOS_PETICAO },
+      { key: 'numero_processo', label: 'Já existe processo? Informe o número', type: 'text', placeholder: '0000000-00.0000.0.00.0000' },
+    ]
+    if (tp === 'Inicial') {
+      f.push(
+        { key: 'competencia', label: 'Competência', type: 'select', options: COMPETENCIAS },
+        { key: 'comarca_uf', label: 'Comarca — UF', type: 'select', options: UFS },
+        { key: 'comarca_cidade', label: 'Comarca — Cidade', type: 'text' },
+        { key: 'justica_gratuita', label: 'Requerer justiça gratuita?', type: 'radio', options: SIM_NAO },
+        { key: 'tipo_acao', label: 'Qual o tipo de ação que deseja?', type: 'text' },
+        { key: 'pedido_cumulado', label: 'Tem pedido cumulado?', type: 'radio', options: SIM_NAO },
+      )
+    } else if (tp === 'Contestação') {
+      f.push({ key: 'houve_citacao', label: 'Houve citação do réu?', type: 'radio', options: SIM_NAO })
+    } else if (PETICAO_PUBLICACAO.includes(tp)) {
+      f.push({ key: 'data_publicacao', label: 'Qual data ocorreu a publicação?', type: 'date' })
+      if (PETICAO_GRATUITA_2N.includes(tp)) {
+        f.push({ key: 'justica_gratuita', label: 'Requerer justiça gratuita?', type: 'radio', options: SIM_NAO })
+      }
+    }
+    return f
+  }
+  if (tipo === 'contrato') {
+    return [{ key: 'tipo_contrato', label: 'Tipo de contrato', type: 'select',
+      options: ['Prestação de Serviços', 'Compra e Venda', 'Locação', 'Confidencialidade (NDA)', 'Sociedade', 'Honorários Advocatícios', 'Distrato', 'Outro'] }]
+  }
+  // parecer / indicacao
+  return [{ key: 'numero_processo', label: 'Número do processo (se houver)', type: 'text', placeholder: 'Se aplicável' }]
+}
+
+// ── Campos do passo "Caso" (por serviço) ───────────────────────────────────────
+function camposCaso(tipo) {
+  if (tipo === 'peticao') {
+    return [
+      { bind: 'descricao', label: 'Nos conte sobre o caso e qual é a versão do réu', type: 'textarea', required: true,
+        placeholder: 'Uma visão geral do processo e um resumo dos acontecimentos.' },
+      { key: 'preliminares', label: 'Tem preliminares a serem arguidas?', type: 'radio', options: ['Preciso de preliminares', 'Não preciso de preliminares'] },
+      { key: 'prejudiciais', label: 'Tem prejudiciais de mérito a serem arguidas?', type: 'radio', options: SIM_NAO },
+      { key: 'topicos', label: 'Quais tópicos são imprescindíveis na sua petição?', type: 'textarea',
+        placeholder: 'Informe somente o tópico — a argumentação e fundamentação é por nossa conta.' },
+      { key: 'tutela_urgencia', label: 'Será necessário requerer tutela de urgência?', type: 'radio', options: SIM_NAO },
+      { key: 'reconvencao', label: 'Deseja pedido de reconvenção ou contraposto?', type: 'radio', options: SIM_NAO },
+      { bind: 'advogado_subscritor', label: 'Advogado subscritor', type: 'text', placeholder: 'Nome e OAB' },
+    ]
+  }
+  if (tipo === 'parecer') {
+    return [
+      { bind: 'descricao', label: 'Situação que deseja o estudo e seus objetivos', type: 'textarea', required: true,
+        placeholder: 'Descreva a situação para elaboração do parecer.' },
+      { bind: 'duvidas', label: 'Quais dúvidas gostaria que fossem esclarecidas?', type: 'textarea',
+        placeholder: 'Aponte as dúvidas sobre o caso para sermos assertivos.' },
+      { bind: 'advogado_subscritor', label: 'Advogado subscritor', type: 'text', placeholder: 'Nome e OAB' },
+    ]
+  }
+  if (tipo === 'contrato') {
+    return [
+      { key: 'contrato_desejado', label: 'Informe o contrato que deseja a elaboração', type: 'text' },
+      { bind: 'descricao', label: 'Objeto do contrato', type: 'textarea', required: true,
+        placeholder: 'Descreva o que as partes estão contratando.' },
+      { key: 'remuneracao', label: 'Forma e condições de remuneração', type: 'textarea',
+        placeholder: 'Valor, forma de pagamento e dados bancários.' },
+      { key: 'prazo_contrato', label: 'Prazo de duração do contrato', type: 'text' },
+      { key: 'clausula_resolutiva', label: 'Cláusula resolutiva', type: 'textarea',
+        placeholder: 'Multas e/ou indenizações pela parte que descumprir.' },
+      { key: 'confidencialidade', label: 'Acordo de confidencialidade?', type: 'radio', options: SIM_NAO },
+      { key: 'direitos_deveres', label: 'Direitos e deveres das partes', type: 'textarea' },
+      { key: 'condicoes_gerais', label: 'Condições gerais', type: 'textarea' },
+      { key: 'extincao_rescisao', label: 'Formas de extinção e rescisão', type: 'textarea' },
+      { key: 'solucao_conflito', label: 'Formas de solução de conflito', type: 'text',
+        placeholder: 'Judicial ou extrajudicial (se extrajudicial, qual via).' },
+      { key: 'foro', label: 'Foro', type: 'text' },
+      { bind: 'advogado_subscritor', label: 'Advogado subscritor', type: 'text', placeholder: 'Nome e OAB' },
+    ]
+  }
+  // indicacao
+  return [
+    { bind: 'descricao', label: 'Nos conte um pouco sobre o caso', type: 'textarea', required: true,
+      placeholder: 'Uma breve visão do processo. Aqui identificamos a petição cabível ao caso.' },
+    { bind: 'advogado_subscritor', label: 'Advogado subscritor', type: 'text', placeholder: 'Nome e OAB' },
+    { key: 'timbrado', label: 'Deverá usar o timbrado do cliente?', type: 'radio', options: SIM_NAO },
+  ]
 }
 
 const ABAS = [
@@ -129,6 +193,7 @@ export default function PedidosPage() {
     const compra = searchParams.get('compra')
     if (!compra) return
     if (compra === 'sucesso') { toast.success('Pagamento recebido! Seus créditos já estão disponíveis.'); refetchAll() }
+    if (compra === 'pendente') toast.info('Pagamento pendente — os créditos entram assim que for confirmado.')
     if (compra === 'cancelado') toast.info('Compra cancelada.')
     searchParams.delete('compra'); setSearchParams(searchParams, { replace: true })
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -261,7 +326,7 @@ function PedidoCard({ p, restante, onVer, onContinuar, onExcluir }) {
   )
 }
 
-// ── Nova Solicitação — WIZARD em etapas ───────────────────────────────────────
+// ── Nova Solicitação — WIZARD ─────────────────────────────────────────────────
 const PASSOS = ['Serviço', 'Partes', 'Caso', 'Entrega']
 
 function NovaSolicitacao({ open, onClose, rascunho, saldo, ehSocio, defaultAdvogado, onComprar, onConcluido, onRascunhoSalvo }) {
@@ -280,39 +345,55 @@ function NovaSolicitacao({ open, onClose, rascunho, saldo, ehSocio, defaultAdvog
     tier: rascunho?.tier || 'padrao',
   }))
   const [campos, setCampos] = useState(() => rascunho?.campos || {})
-  const [partes, setPartes] = useState(() => (Array.isArray(rascunho?.partes) && rascunho.partes.length ? rascunho.partes : []))
+  const [partes, setPartes] = useState(() => (Array.isArray(rascunho?.partes) ? rascunho.partes : []))
   const [anexosServer, setAnexosServer] = useState(() => (Array.isArray(rascunho?.anexos) ? rascunho.anexos : []))
-  const [pendentes, setPendentes] = useState([]) // File[]
+  const [pendentes, setPendentes] = useState([])
   const fileRef = useRef(null)
 
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }))
   const setCampo = (k, v) => setCampos(c => ({ ...c, [k]: v }))
-  const addParte = () => setPartes(ps => [...ps, { nome: '', tipo: tiposParte(form.tipo_servico)[0], representada: false }])
-  const setParte = (i, k, v) => setPartes(ps => ps.map((p, idx) => idx === i ? { ...p, [k]: v } : p))
-  const rmParte = (i) => setPartes(ps => ps.filter((_, idx) => idx !== i))
+  const setVal = (f, v) => f.bind ? set(f.bind, v) : setCampo(f.key, v)
+  const getVal = (f) => (f.bind ? (form[f.bind] ?? '') : (campos[f.key] ?? ''))
 
-  const camposDef = CAMPOS_SERVICO[form.tipo_servico] || []
+  const fieldsServico = camposServico(form.tipo_servico, campos)
+  const fieldsCaso    = camposCaso(form.tipo_servico)
+  const partesCfg     = PARTES[form.tipo_servico] || PARTES.peticao
+
   const totalAnexos = anexosServer.length + pendentes.length
   const needed = TIERS[form.tier].creditos
   const temSaldo = saldo >= needed
 
-  // Ao trocar de serviço: limpa campos dinâmicos que não pertencem mais e
-  // reajusta o tipo das partes para as opções válidas do novo serviço.
+  // Ao trocar de serviço, limpa campos que não pertencem mais e reajusta partes.
   useEffect(() => {
-    const validas = new Set((CAMPOS_SERVICO[form.tipo_servico] || []).map(c => c.key))
+    const validas = new Set(camposServico(form.tipo_servico, {}).map(c => c.key)
+      .concat(camposServico(form.tipo_servico, { tipo_peticao: 'Inicial' }).map(c => c.key))
+      .concat(camposServico(form.tipo_servico, { tipo_peticao: 'Contestação' }).map(c => c.key))
+      .concat(camposServico(form.tipo_servico, { tipo_peticao: 'Recursos' }).map(c => c.key))
+      .concat(camposCaso(form.tipo_servico).filter(c => c.key).map(c => c.key)))
     setCampos(c => Object.fromEntries(Object.entries(c).filter(([k]) => validas.has(k))))
-    const opts = tiposParte(form.tipo_servico)
-    setPartes(ps => ps.map(p => (opts.includes(p.tipo) ? p : { ...p, tipo: opts[0] })))
+    const cfg = PARTES[form.tipo_servico] || PARTES.peticao
+    if (cfg.modo === 'fixa2') setPartes(ps => normalizarFixa2(ps))
+    else setPartes(ps => ps.filter(p => p.tipo !== 'Parte 1' && p.tipo !== 'Parte 2').map(p => cfg.tipos.includes(p.tipo) ? p : { ...p, tipo: cfg.tipos[0] }))
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [form.tipo_servico])
 
-  // Ao trocar de área, a subárea anterior pode não existir mais → limpa.
   useEffect(() => {
     const opts = SUBAREAS[form.area]
     if (opts && form.sub_area && !opts.includes(form.sub_area)) set('sub_area', '')
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [form.area])
 
+  // Partes
+  const addParte = () => setPartes(ps => [...ps, { nome: '', tipo: partesCfg.tipos[0], representada: false }])
+  const setParte = (i, k, v) => setPartes(ps => ps.map((p, idx) => idx === i ? { ...p, [k]: v } : p))
+  const rmParte = (i) => setPartes(ps => ps.filter((_, idx) => idx !== i))
+  const setFixa = (idx, nome) => setPartes(ps => {
+    const base = normalizarFixa2(ps)
+    base[idx] = { ...base[idx], nome }
+    return base
+  })
+
+  // Anexos
   const onPickFiles = (e) => {
     const files = Array.from(e.target.files || [])
     const livres = MAX_ANEXOS - totalAnexos
@@ -341,13 +422,17 @@ function NovaSolicitacao({ open, onClose, rascunho, saldo, ehSocio, defaultAdvog
     setAnexosServer(r.anexos || []); setPendentes([])
   }
 
-  const podeAvancar = () => {
-    if (passo === 0) {
-      const obrig = camposDef.filter(c => c.required && (!c.showIf || c.showIf(campos)))
-      for (const c of obrig) if (!campos[c.key]) { toast.error(`Preencha: ${c.label}.`); return false }
-      return true
+  const faltaObrig = (fields) => {
+    for (const f of fields) {
+      if (!f.required) continue
+      const v = getVal(f)
+      if (!v || !String(v).trim()) return f.label
     }
-    if (passo === 2 && !form.descricao.trim()) { toast.error('Descreva a situação/fatos do caso.'); return false }
+    return null
+  }
+  const podeAvancar = () => {
+    if (passo === 0) { const m = faltaObrig(fieldsServico); if (m) { toast.error(`Preencha: ${m}.`); return false } }
+    if (passo === 2) { const m = faltaObrig(fieldsCaso); if (m) { toast.error(`Preencha: ${m}.`); return false } }
     return true
   }
   const avancar = () => { if (podeAvancar()) setPasso(p => Math.min(p + 1, PASSOS.length - 1)) }
@@ -361,9 +446,10 @@ function NovaSolicitacao({ open, onClose, rascunho, saldo, ehSocio, defaultAdvog
     onError: (m) => { if (/insuficiente/i.test(m)) { toast.error('Créditos insuficientes.'); onComprar() } else toast.error(m) },
   })
 
+  const fixas = normalizarFixa2(partes)
+
   return (
     <Modal open={open} onClose={onClose} title={rascunho ? 'Continuar solicitação' : 'Nova Solicitação'} size="lg">
-      {/* Indicador de etapas */}
       <div className="flex items-center gap-2 mb-5">
         {PASSOS.map((nome, i) => (
           <div key={nome} className="flex items-center gap-2 flex-1">
@@ -376,7 +462,7 @@ function NovaSolicitacao({ open, onClose, rascunho, saldo, ehSocio, defaultAdvog
         ))}
       </div>
 
-      <div className="min-h-[260px]">
+      <div className="min-h-[280px]">
         {/* PASSO 1 — Serviço */}
         {passo === 0 && (
           <div className="space-y-4">
@@ -393,78 +479,63 @@ function NovaSolicitacao({ open, onClose, rascunho, saldo, ehSocio, defaultAdvog
                 </select>
               </FormField>
             </div>
-            {/* Campos dinâmicos do serviço */}
-            {camposDef.filter(c => !c.showIf || c.showIf(campos)).map(c => (
-              <FormField key={c.key} label={c.label} required={c.required}>
-                {c.type === 'select' ? (
-                  <select className="input" value={campos[c.key] || ''} onChange={e => setCampo(c.key, e.target.value)}>
-                    <option value="">Selecione…</option>
-                    {c.options.map(o => <option key={o} value={o}>{o}</option>)}
-                  </select>
-                ) : c.type === 'radio' ? (
-                  <div className="flex items-center gap-5 pt-1">
-                    {c.options.map(o => (
-                      <label key={o} className="flex items-center gap-1.5 text-sm text-gray-700 cursor-pointer">
-                        <input type="radio" name={c.key} checked={campos[c.key] === o} onChange={() => setCampo(c.key, o)} className="accent-brand-700" /> {o}
-                      </label>
-                    ))}
-                  </div>
-                ) : c.type === 'date' ? (
-                  <input type="date" className="input" value={campos[c.key] || ''} onChange={e => setCampo(c.key, e.target.value)} />
-                ) : (
-                  <input className="input" value={campos[c.key] || ''} onChange={e => setCampo(c.key, e.target.value)} placeholder={c.placeholder || ''} />
-                )}
-                {c.hint && <p className="text-xs text-gray-400 mt-1">{c.hint}</p>}
-              </FormField>
-            ))}
+
             <SubareaField key={form.area} area={form.area} value={form.sub_area} onChange={v => set('sub_area', v)} />
+
+            {/* Serviços adicionais (Cálculo em breve) */}
+            <div>
+              <label className="text-sm font-medium text-gray-700 mb-1.5 block">Serviços adicionais</label>
+              <label className="flex items-center gap-2 text-sm text-gray-400 cursor-not-allowed select-none">
+                <input type="checkbox" disabled className="accent-brand-700" />
+                Cálculo <span className="text-[10px] bg-gray-100 text-gray-500 rounded px-1.5 py-0.5">em breve</span>
+              </label>
+            </div>
+
+            {fieldsServico.map(f => <CampoDinamico key={f.key} f={f} value={getVal(f)} onChange={(v) => setVal(f, v)} />)}
           </div>
         )}
 
         {/* PASSO 2 — Partes */}
         {passo === 1 && (
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <p className="text-sm text-gray-500">Quem são as partes envolvidas?</p>
-              <button type="button" onClick={addParte} className="btn-ghost flex items-center gap-1 text-xs"><Plus size={13} /> Adicionar parte</button>
+          partesCfg.modo === 'fixa2' ? (
+            <div className="space-y-4">
+              <p className="text-sm text-gray-500">Informe as partes do processo.</p>
+              <FormField label="Parte 01"><input className="input" value={fixas[0].nome} onChange={e => setFixa(0, e.target.value)} placeholder="Nome da Parte 01" /></FormField>
+              <FormField label="Parte 02"><input className="input" value={fixas[1].nome} onChange={e => setFixa(1, e.target.value)} placeholder="Nome da Parte 02" /></FormField>
             </div>
-            {partes.length === 0 ? (
-              <div className="text-center py-10 text-sm text-gray-400">Nenhuma parte adicionada. (Opcional)</div>
-            ) : (
-              <div className="space-y-2">
-                {partes.map((p, i) => (
-                  <div key={i} className="flex flex-wrap items-center gap-2">
-                    <input className="input flex-1 min-w-[180px]" placeholder="Nome completo da parte" value={p.nome} onChange={e => setParte(i, 'nome', e.target.value)} />
-                    <select className="input !w-44" value={p.tipo} onChange={e => setParte(i, 'tipo', e.target.value)}>
-                      {tiposParte(form.tipo_servico).map(t => <option key={t} value={t}>{t}</option>)}
-                    </select>
-                    <label className="flex items-center gap-1.5 text-xs text-gray-600 cursor-pointer whitespace-nowrap">
-                      <input type="checkbox" checked={!!p.representada} onChange={e => setParte(i, 'representada', e.target.checked)} className="accent-brand-700" /> É representada
-                    </label>
-                    <button type="button" onClick={() => rmParte(i)} className="text-gray-300 hover:text-red-500 p-1"><X size={16} /></button>
-                  </div>
-                ))}
+          ) : (
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-sm text-gray-500">Quem são as partes no processo?</p>
+                <button type="button" onClick={addParte} className="btn-ghost flex items-center gap-1 text-xs"><Plus size={13} /> Adicionar parte</button>
               </div>
-            )}
-          </div>
+              {partes.length === 0 ? (
+                <div className="text-center py-10 text-sm text-gray-400">Nenhuma parte adicionada. (Opcional)</div>
+              ) : (
+                <div className="space-y-2">
+                  {partes.map((p, i) => (
+                    <div key={i} className="flex flex-wrap items-center gap-2">
+                      <input className="input flex-1 min-w-[180px]" placeholder="Nome completo da parte" value={p.nome} onChange={e => setParte(i, 'nome', e.target.value)} />
+                      <select className="input !w-44" value={p.tipo} onChange={e => setParte(i, 'tipo', e.target.value)}>
+                        {partesCfg.tipos.map(t => <option key={t} value={t}>{t}</option>)}
+                      </select>
+                      <label className="flex items-center gap-1.5 text-xs text-gray-600 cursor-pointer whitespace-nowrap">
+                        <input type="checkbox" checked={!!p.representada} onChange={e => setParte(i, 'representada', e.target.checked)} className="accent-brand-700" /> É representada
+                      </label>
+                      <button type="button" onClick={() => rmParte(i)} className="text-gray-300 hover:text-red-500 p-1"><X size={16} /></button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )
         )}
 
         {/* PASSO 3 — Caso + anexos */}
         {passo === 2 && (
           <div className="space-y-4">
-            <FormField label="Situação e fatos do caso" required>
-              <textarea className="input min-h-[120px]" value={form.descricao} onChange={e => set('descricao', e.target.value)}
-                placeholder="Descreva os fatos, o contexto e o que você precisa. Quanto mais detalhe, melhor a peça." />
-            </FormField>
-            <FormField label="Dúvidas / quesitos (opcional)">
-              <textarea className="input min-h-[70px]" value={form.duvidas} onChange={e => set('duvidas', e.target.value)}
-                placeholder="Pontos específicos a responder (útil em pareceres)." />
-            </FormField>
-            <FormField label="Advogado subscritor">
-              <input className="input" value={form.advogado_subscritor} onChange={e => set('advogado_subscritor', e.target.value)} />
-            </FormField>
+            {fieldsCaso.map(f => <CampoDinamico key={f.bind || f.key} f={f} value={getVal(f)} onChange={(v) => setVal(f, v)} />)}
 
-            {/* Anexos */}
             <div>
               <div className="flex items-center justify-between mb-1.5">
                 <label className="text-sm font-medium text-gray-700">Documentos do caso <span className="text-gray-400 font-normal">(imagens e PDF, até {MAX_ANEXOS})</span></label>
@@ -478,12 +549,8 @@ function NovaSolicitacao({ open, onClose, rascunho, saldo, ehSocio, defaultAdvog
               </button>
               {(anexosServer.length > 0 || pendentes.length > 0) && (
                 <div className="mt-2 space-y-1.5">
-                  {anexosServer.map((a, i) => (
-                    <AnexoRow key={`s${i}`} nome={a.nome} mime={a.mime} onRemove={() => rmAnexoServer(i)} />
-                  ))}
-                  {pendentes.map((f, i) => (
-                    <AnexoRow key={`p${i}`} nome={f.name} mime={f.type} pendente onRemove={() => rmPendente(i)} />
-                  ))}
+                  {anexosServer.map((a, i) => <AnexoRow key={`s${i}`} nome={a.nome} mime={a.mime} onRemove={() => rmAnexoServer(i)} />)}
+                  {pendentes.map((f, i) => <AnexoRow key={`p${i}`} nome={f.name} mime={f.type} pendente onRemove={() => rmPendente(i)} />)}
                 </div>
               )}
             </div>
@@ -506,10 +573,10 @@ function NovaSolicitacao({ open, onClose, rascunho, saldo, ehSocio, defaultAdvog
                 </button>
               ))}
             </div>
-            {/* Resumo */}
             <div className="rounded-xl bg-gray-50 border border-gray-100 p-4 text-sm space-y-1.5">
               <div className="flex justify-between"><span className="text-gray-500">Serviço</span><span className="text-gray-800 font-medium">{TIPO_LABEL[form.tipo_servico]}{form.area ? ` · ${form.area}` : ''}</span></div>
               {campos.tipo_peticao && <div className="flex justify-between"><span className="text-gray-500">Tipo</span><span className="text-gray-800">{campos.tipo_peticao}</span></div>}
+              {campos.tipo_contrato && <div className="flex justify-between"><span className="text-gray-500">Tipo</span><span className="text-gray-800">{campos.tipo_contrato}</span></div>}
               <div className="flex justify-between"><span className="text-gray-500">Documentos anexados</span><span className="text-gray-800">{totalAnexos}</span></div>
               <div className="flex justify-between"><span className="text-gray-500">Custo</span><span className="text-gray-800 font-medium">{needed} crédito{needed === 1 ? '' : 's'}</span></div>
             </div>
@@ -517,13 +584,8 @@ function NovaSolicitacao({ open, onClose, rascunho, saldo, ehSocio, defaultAdvog
         )}
       </div>
 
-      {/* Rodapé / navegação */}
       <div className="mt-5 pt-4 border-t border-gray-100 flex items-center justify-between gap-3">
-        <div>
-          {passo > 0 && (
-            <button onClick={voltar} disabled={loading} className="btn-ghost flex items-center gap-1"><ChevronLeft size={15} /> Voltar</button>
-          )}
-        </div>
+        <div>{passo > 0 && <button onClick={voltar} disabled={loading} className="btn-ghost flex items-center gap-1"><ChevronLeft size={15} /> Voltar</button>}</div>
         <div className="flex items-center gap-2">
           <span className="text-xs text-gray-400 mr-1">Saldo: <span className={temSaldo ? 'text-gray-600' : 'text-red-500'}>{saldo}</span></span>
           {passo < PASSOS.length - 1 ? (
@@ -545,6 +607,42 @@ function NovaSolicitacao({ open, onClose, rascunho, saldo, ehSocio, defaultAdvog
         </div>
       </div>
     </Modal>
+  )
+}
+
+function normalizarFixa2(ps) {
+  const arr = Array.isArray(ps) ? ps.slice(0, 2) : []
+  return [
+    { nome: arr[0]?.nome || '', tipo: 'Parte 1' },
+    { nome: arr[1]?.nome || '', tipo: 'Parte 2' },
+  ]
+}
+
+// Renderiza um campo do schema conforme o tipo.
+function CampoDinamico({ f, value, onChange }) {
+  return (
+    <FormField label={f.label} required={f.required}>
+      {f.type === 'select' ? (
+        <select className="input" value={value} onChange={e => onChange(e.target.value)}>
+          <option value="">Selecione…</option>
+          {f.options.map(o => <option key={o} value={o}>{o}</option>)}
+        </select>
+      ) : f.type === 'radio' ? (
+        <div className="flex flex-wrap items-center gap-4 pt-1">
+          {f.options.map(o => (
+            <label key={o} className="flex items-center gap-1.5 text-sm text-gray-700 cursor-pointer">
+              <input type="radio" name={f.key || f.bind} checked={value === o} onChange={() => onChange(o)} className="accent-brand-700" /> {o}
+            </label>
+          ))}
+        </div>
+      ) : f.type === 'date' ? (
+        <input type="date" className="input" value={value} onChange={e => onChange(e.target.value)} />
+      ) : f.type === 'textarea' ? (
+        <textarea className="input min-h-[90px]" value={value} onChange={e => onChange(e.target.value)} placeholder={f.placeholder || ''} />
+      ) : (
+        <input className="input" value={value} onChange={e => onChange(e.target.value)} placeholder={f.placeholder || ''} />
+      )}
+    </FormField>
   )
 }
 
@@ -595,7 +693,7 @@ function CompraCreditos({ open, onClose, packs }) {
   }
   return (
     <Modal open={open} onClose={onClose} title="Comprar créditos" size="md">
-      <p className="text-sm text-gray-500 mb-4">Cada crédito gera uma peça no Padrão (Express usa 2). O pagamento é processado pelo Stripe.</p>
+      <p className="text-sm text-gray-500 mb-4">Cada crédito gera uma peça no Padrão (Express usa 2). Pagamento por Pix ou cartão.</p>
       <div className="space-y-2">
         {packs.map(pk => {
           const porCred = (pk.precoCentavos / 100 / pk.creditos).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
