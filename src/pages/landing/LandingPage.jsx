@@ -1,19 +1,34 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
-  ArrowRight, Scale, Clock, FileText, Users, Calendar,
-  DollarSign, Sparkles, Tag, ShieldCheck, Quote, Check, X,
+  ArrowRight, Clock, FileText, Users, Calendar,
+  Sparkles, Tag, ShieldCheck, Check, X,
   CreditCard, Mail, Unlock, Columns, BarChart3, UserCheck,
 } from 'lucide-react'
 import { useApi } from '../../hooks/useApi.js'
 import { assinaturaService } from '../../services/api.js'
 import { FEATURES_POR_PLANO, PUBLICO_POR_PLANO } from '../../data/planos.js'
 import { MockupKanbanPro, MockupPortal, MockupRelatorios } from './LandingMockupsPro.jsx'
-import lexrunLogo from '../../assets/lexrun-logo.png'
-// ── Autuação ao vivo (assinatura visual do hero) ─────────────────────────────
-// Em vez de uma imagem estática, simula um número de processo sendo
-// autuado em tempo real — referência direta ao vernáculo jurídico
-// (numeração CNJ) em vez de um elemento decorativo genérico.
+
+/* ------------------------------------------------------------------ *
+ *  Selo LexRun — substitui a logo PNG (sem dependência de imagem).
+ * ------------------------------------------------------------------ */
+function LexRunSeal({ size = 34, light = false }) {
+  return (
+    <span className="inline-flex items-center gap-2.5">
+      <svg width={size} height={size} viewBox="0 0 40 40" fill="none">
+        <rect width="40" height="40" rx="11" fill="#0a1c3a" />
+        <path d="M11 13l7 7-7 7" stroke="#d4af37" strokeWidth="3" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+        <path d="M19 13l7 7-7 7" stroke="#d4af37" strokeWidth="3" fill="none" strokeLinecap="round" strokeLinejoin="round" opacity="0.45" />
+      </svg>
+      <span className="font-display font-semibold tracking-tight" style={{ fontSize: Math.round(size * 0.6), color: light ? '#fff' : '#0a1c3a' }}>
+        Lex<span style={{ color: light ? '#d4af37' : '#b3892f' }}>Run</span>
+      </span>
+    </span>
+  )
+}
+
+/* ── Autuação ao vivo (assinatura visual do hero) ─────────────────── */
 function AutuacaoAoVivo() {
   const [texto, setTexto] = useState('')
   const alvo = '0001847-23.2026.8.13.0247'
@@ -23,19 +38,17 @@ function AutuacaoAoVivo() {
     const interval = setInterval(() => {
       indexRef.current += 1
       setTexto(alvo.slice(0, indexRef.current))
-      if (indexRef.current >= alvo.length) {
-        clearInterval(interval)
-      }
+      if (indexRef.current >= alvo.length) clearInterval(interval)
     }, 70)
     return () => clearInterval(interval)
   }, [])
 
   return (
-    <div className="inline-flex items-center gap-2.5 bg-white border border-gold-100 rounded-full px-4 py-2 shadow-sm">
-      <span className="w-1.5 h-1.5 rounded-full bg-accent-500 animate-pulse flex-shrink-0"/>
-      <span className="text-[11px] text-brand-900/50 uppercase tracking-wider font-medium">Autuado agora</span>
-      <span className="font-mono text-xs text-brand-900 tabular-nums">
-        {texto}<span className="opacity-40">{'|'.repeat(texto.length < alvo.length ? 1 : 0)}</span>
+    <div className="inline-flex items-center gap-2.5 bg-white/[0.06] border border-gold-400/30 rounded-full px-4 py-2">
+      <span className="w-1.5 h-1.5 rounded-full bg-accent-400 animate-pulse flex-shrink-0" />
+      <span className="text-[10.5px] text-white/50 uppercase tracking-[0.12em] font-semibold">Autuado agora</span>
+      <span className="font-mono text-xs text-white tabular-nums">
+        {texto}<span className="text-gold-400 animate-pulse">{texto.length < alvo.length ? '|' : ''}</span>
       </span>
     </div>
   )
@@ -68,7 +81,6 @@ const FUNCIONALIDADES = [
   },
 ]
 
-// Comparação Sem vs Com — formato persuasivo de problema/solução.
 const SEM_VS_COM = [
   { desafio: 'Acompanhar andamentos', sem: 'Consultar cada tribunal na mão, um por um', com: 'Sincronização automática pelo número CNJ' },
   { desafio: 'Controle de prazos', sem: 'Planilhas e post-its com risco de esquecer', com: 'Agenda integrada ao processo e ao cliente' },
@@ -78,12 +90,12 @@ const SEM_VS_COM = [
 ]
 
 const RECURSOS_GRID = [
-  { icon: Users,         titulo: 'Portal do cliente', texto: 'Seu cliente acompanha o processo sem te ligar a cada dois dias.' },
-  { icon: Calendar,      titulo: 'Agenda integrada',  texto: 'Prazos e audiências vinculados direto ao processo e ao cliente.' },
-  { icon: Sparkles,      titulo: 'IA de documentos',  texto: 'Gere petições, peças simples e procurações a partir de uma instrução em texto.' },
-  { icon: Tag,           titulo: 'Etiquetas organizadas', texto: 'Marque clientes, processos e compromissos do seu jeito, sem funil fixo.' },
-  { icon: FileText,      titulo: 'Documentos e modelos', texto: 'Gere PDFs com sua marca a partir de templates prontos.' },
-  { icon: ShieldCheck,   titulo: 'Multi-tenant seguro', texto: 'Cada escritório isolado logicamente — seus dados nunca se misturam com os de outro.' },
+  { icon: Users,       titulo: 'Portal do cliente', texto: 'Seu cliente acompanha o processo sem te ligar a cada dois dias.' },
+  { icon: Calendar,    titulo: 'Agenda integrada',  texto: 'Prazos e audiências vinculados direto ao processo e ao cliente.' },
+  { icon: Sparkles,    titulo: 'IA de documentos',  texto: 'Gere petições, peças simples e procurações a partir de uma instrução em texto.' },
+  { icon: Tag,         titulo: 'Etiquetas organizadas', texto: 'Marque clientes, processos e compromissos do seu jeito, sem funil fixo.' },
+  { icon: FileText,    titulo: 'Documentos e modelos', texto: 'Gere PDFs com sua marca a partir de templates prontos.' },
+  { icon: ShieldCheck, titulo: 'Multi-tenant seguro', texto: 'Cada escritório isolado logicamente — seus dados nunca se misturam com os de outro.' },
 ]
 
 export default function LandingPage() {
@@ -93,74 +105,83 @@ export default function LandingPage() {
   return (
     <div className="bg-paper text-brand-900 font-sans antialiased overflow-x-hidden">
 
-      <header className="sticky top-0 z-40 bg-paper/90 backdrop-blur-sm border-b border-brand-900/[0.06]">
-        <div className="max-w-6xl mx-auto px-6 h-20 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <img src={lexrunLogo} alt="LexRun" className="h-24 w-auto object-contain scale-110" />
-          </div>
-          <nav className="hidden md:flex items-center gap-8 text-sm text-brand-900/70">
+      {/* ===================== HEADER ===================== */}
+      <header className="sticky top-0 z-40 bg-paper/85 backdrop-blur-md border-b border-brand-900/[0.06]">
+        <div className="max-w-6xl mx-auto px-6 h-[74px] flex items-center justify-between">
+          <button onClick={() => navigate('/')} aria-label="LexRun">
+            <LexRunSeal size={34} />
+          </button>
+          <nav className="hidden md:flex items-center gap-8 text-sm text-brand-900/65">
             <a href="#recursos" className="hover:text-brand-900 transition-colors">Recursos</a>
             <a href="#planos" className="hover:text-brand-900 transition-colors">Planos</a>
             <a href="#faq" className="hover:text-brand-900 transition-colors">Perguntas frequentes</a>
           </nav>
-          <div className="flex items-center gap-3">
-            <button onClick={() => navigate('/login')} className="text-sm text-brand-900/70 hover:text-brand-900 transition-colors hidden sm:block">
-              Entrar
-            </button>
+          <div className="flex items-center gap-3.5">
+            <button onClick={() => navigate('/login')} className="text-sm text-brand-900/65 hover:text-brand-900 transition-colors hidden sm:block">Entrar</button>
             <button onClick={() => navigate('/comecar')}
               className="bg-brand-900 text-white text-sm px-4 py-2 rounded-lg hover:bg-brand-700 transition-colors flex items-center gap-1.5">
-              Começar agora <ArrowRight size={13}/>
+              Começar agora <ArrowRight size={13} className="text-gold-400" />
             </button>
           </div>
         </div>
       </header>
 
-      <section className="max-w-6xl mx-auto px-6 pt-16 pb-20 md:pt-24 md:pb-28">
-        <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+      {/* ===================== HERO (dark navy) ===================== */}
+      <section className="relative overflow-hidden text-white"
+        style={{ background: 'radial-gradient(120% 120% at 15% 8%, #12305c 0%, #0a1c3a 48%, #061224 100%)' }}>
+        <div className="absolute inset-0 pointer-events-none opacity-60"
+          style={{ backgroundImage: 'radial-gradient(rgba(255,255,255,.05) 1px, transparent 1px)', backgroundSize: '28px 28px' }} />
+        <div className="absolute -top-36 -right-16 w-[560px] h-[560px] rounded-full pointer-events-none"
+          style={{ background: 'radial-gradient(circle, rgba(212,175,55,.18) 0%, rgba(212,175,55,0) 68%)' }} />
+
+        <div className="relative max-w-6xl mx-auto px-6 pt-16 pb-24 grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
           <div>
-            <AutuacaoAoVivo/>
-            <h1 className="font-display font-semibold text-[36px] sm:text-[52px] leading-[1.05] mt-7 tracking-tight">
-              A gestão do seu escritório, <span className="italic text-gold-600">conduzida</span> com a mesma disciplina de um processo bem instruído.
+            <AutuacaoAoVivo />
+            <h1 className="font-display font-semibold text-[38px] sm:text-[56px] leading-[1.06] mt-7 tracking-tight">
+              A gestão do seu escritório, <span className="italic text-gold-300">conduzida</span> com a disciplina de um processo bem instruído.
             </h1>
-            <p className="text-lg text-brand-900/65 mt-6 max-w-xl leading-relaxed">
+            <p className="text-lg text-white/65 mt-6 max-w-xl leading-relaxed">
               Kanban jurídico, financeiro, portal do cliente e geração de documentos por IA — tudo isolado por escritório, num só sistema.
             </p>
-            <div className="flex flex-wrap items-center gap-4 mt-9">
+            <div className="flex flex-wrap items-center gap-5 mt-9">
               <button onClick={() => navigate('/comecar')}
-                className="bg-brand-900 text-white px-6 py-3.5 rounded-xl text-sm font-medium hover:bg-brand-700 transition-colors flex items-center gap-2">
-                Criar minha conta <ArrowRight size={15}/>
+                className="px-6 py-3.5 rounded-xl text-sm font-semibold flex items-center gap-2 transition-transform hover:-translate-y-0.5"
+                style={{ background: 'linear-gradient(135deg,#e0bd55,#c39a2e)', color: '#1a1304', boxShadow: '0 16px 34px -14px rgba(212,175,55,.6)' }}>
+                Criar minha conta <ArrowRight size={15} />
               </button>
-              <a href="#recursos" className="text-sm text-brand-900/60 hover:text-brand-900 transition-colors">
-                Ver como funciona ↓
-              </a>
+              <a href="#recursos" className="text-sm text-white/60 hover:text-white transition-colors">Ver como funciona ↓</a>
             </div>
 
-            <div className="flex flex-wrap gap-x-10 gap-y-3 mt-12 pt-8 border-t border-brand-900/[0.07]">
-              {[['7 dias', 'para reembolso total, sem perguntas'], ['Sem fidelidade', 'cancele quando quiser, direto pelo sistema'], ['LGPD', 'seus dados isolados por escritório']].map(([v, l]) => (
+            <div className="flex flex-wrap gap-x-10 gap-y-3 mt-12 pt-8 border-t border-white/10">
+              {[['7 dias', 'para reembolso total, sem perguntas'], ['Sem fidelidade', 'cancele quando quiser, pelo sistema'], ['LGPD', 'dados isolados por escritório']].map(([v, l]) => (
                 <div key={v}>
-                  <p className="font-display text-xl font-semibold text-brand-900">{v}</p>
-                  <p className="text-xs text-brand-900/45 max-w-[160px]">{l}</p>
+                  <p className="font-display text-xl font-semibold text-white">{v}</p>
+                  <p className="text-xs text-white/45 max-w-[160px]">{l}</p>
                 </div>
               ))}
             </div>
           </div>
 
-          {/* Mockup flutuante do hero */}
+          {/* Mockup flutuante do hero (componente real) */}
           <div className="relative hidden lg:block">
-            <div className="absolute -inset-4 bg-gradient-to-tr from-gold-100/40 to-accent-50/30 rounded-[2rem] blur-2xl"/>
-            <div className="relative rounded-2xl border border-brand-900/[0.07] shadow-[0_30px_60px_-15px_rgba(15,30,48,0.25)] overflow-hidden bg-white">
-              <MockupKanbanPro className="w-full h-auto block"/>
+            <div className="absolute -inset-5 rounded-[2rem] blur-2xl pointer-events-none"
+              style={{ background: 'radial-gradient(circle at 70% 30%, rgba(212,175,55,.22), transparent 70%)' }} />
+            <div className="relative rounded-2xl border border-white/10 shadow-[0_40px_80px_-30px_rgba(0,0,0,0.7)] overflow-hidden bg-white">
+              <MockupKanbanPro className="w-full h-auto block" />
             </div>
           </div>
         </div>
       </section>
 
-      {/* Destaque: Solicitação de peças */}
-      <section className="max-w-6xl mx-auto px-6 py-10 md:py-16">
-        <div className="bg-brand-900 rounded-3xl px-8 py-12 md:px-12 md:py-14 relative overflow-hidden">
+      {/* ===================== IA PEÇAS ===================== */}
+      <section className="max-w-6xl mx-auto px-6 pt-16 pb-6">
+        <div className="relative overflow-hidden rounded-[26px] px-8 py-12 md:px-12 md:py-14"
+          style={{ background: 'radial-gradient(120% 140% at 85% 10%, #14315c 0%, #0a1c3a 60%)' }}>
+          <div className="absolute -top-20 -right-10 w-80 h-80 rounded-full pointer-events-none"
+            style={{ background: 'radial-gradient(circle, rgba(212,175,55,.2) 0%, rgba(212,175,55,0) 70%)' }} />
           <div className="relative max-w-2xl">
-            <span className="inline-block text-gold-400 text-xs font-medium tracking-wider uppercase mb-3">Novo</span>
-            <h2 className="font-display font-semibold text-2xl md:text-3xl text-white mb-3">
+            <span className="inline-block text-gold-300 text-xs font-semibold tracking-[0.14em] uppercase mb-3">Novo</span>
+            <h2 className="font-display font-semibold text-2xl md:text-3xl text-white mb-3 leading-tight">
               Precisa de uma peça? A gente redige para você.
             </h2>
             <p className="text-white/65 leading-relaxed mb-6">
@@ -172,46 +193,49 @@ export default function LandingPage() {
                 <span key={t} className="text-sm text-white/80 bg-white/10 rounded-full px-3.5 py-1.5">{t}</span>
               ))}
             </div>
-            <a href="/comecar" className="bg-white text-brand-900 px-6 py-3 rounded-xl text-sm font-medium hover:bg-gold-100 transition-colors inline-flex items-center gap-2">
-              Começar agora
-            </a>
+            <button onClick={() => navigate('/comecar')}
+              className="bg-white text-brand-900 px-6 py-3 rounded-xl text-sm font-semibold hover:bg-gold-100 transition-colors inline-flex items-center gap-2">
+              Começar agora <ArrowRight size={15} />
+            </button>
           </div>
         </div>
       </section>
 
-      <section className="max-w-6xl mx-auto px-6 py-10 md:py-14">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      {/* ===================== COMO FUNCIONA ===================== */}
+      <section className="max-w-6xl mx-auto px-6 py-12 md:py-14">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-7">
           {COMO_FUNCIONA.map((passo, i) => (
-            <div key={passo.titulo} className="relative">
-              <div className="flex items-center gap-3 mb-3">
-                <div className="w-9 h-9 rounded-full bg-brand-900 text-gold-500 flex items-center justify-center flex-shrink-0">
-                  <passo.icon size={15}/>
+            <div key={passo.titulo}>
+              <div className="flex items-center gap-3 mb-3.5">
+                <div className="w-9 h-9 rounded-full bg-brand-900 text-gold-400 flex items-center justify-center flex-shrink-0">
+                  <passo.icon size={15} />
                 </div>
                 <span className="font-mono text-xs text-brand-900/35">{`0${i + 1}`}</span>
               </div>
-              <p className="font-medium text-[15px] mb-1.5">{passo.titulo}</p>
+              <p className="font-semibold text-[15px] mb-1.5">{passo.titulo}</p>
               <p className="text-sm text-brand-900/55 leading-relaxed">{passo.texto}</p>
             </div>
           ))}
         </div>
       </section>
 
-      <section id="recursos" className="max-w-6xl mx-auto px-6 py-10 md:py-16 space-y-24 md:space-y-32">
+      {/* ===================== FUNCIONALIDADES ===================== */}
+      <section id="recursos" className="max-w-6xl mx-auto px-6 py-12 md:py-16 space-y-24 md:space-y-28">
         {FUNCIONALIDADES.map((f, i) => {
           const Mockup = f.mockup
           const invertido = i % 2 === 1
           return (
             <div key={f.titulo} className={`flex flex-col ${invertido ? 'md:flex-row-reverse' : 'md:flex-row'} items-center gap-10 md:gap-16`}>
               <div className="flex-1">
-                <div className="w-10 h-10 rounded-xl bg-brand-900 flex items-center justify-center mb-5">
-                  <f.icon size={18} className="text-gold-500"/>
+                <div className="w-11 h-11 rounded-xl bg-brand-900 flex items-center justify-center mb-5">
+                  <f.icon size={19} className="text-gold-400" />
                 </div>
                 <h3 className="font-display font-semibold text-2xl md:text-3xl mb-3">{f.titulo}</h3>
                 <p className="text-brand-900/60 leading-relaxed max-w-md">{f.texto}</p>
               </div>
               <div className="flex-1 w-full">
-                <div className="rounded-2xl border border-brand-900/[0.07] shadow-[0_24px_48px_-12px_rgba(15,30,48,0.18)] overflow-hidden">
-                  <Mockup className="w-full h-auto block"/>
+                <div className="rounded-2xl border border-brand-900/[0.07] shadow-[0_28px_56px_-22px_rgba(15,30,48,0.2)] overflow-hidden">
+                  <Mockup className="w-full h-auto block" />
                 </div>
               </div>
             </div>
@@ -219,19 +243,22 @@ export default function LandingPage() {
         })}
       </section>
 
-      <section className="max-w-6xl mx-auto px-6 py-10 md:py-16">
+      {/* ===================== RECURSOS GRID ===================== */}
+      <section className="max-w-6xl mx-auto px-6 py-8 md:py-14">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {RECURSOS_GRID.map(r => (
             <div key={r.titulo} className="bg-white rounded-2xl border border-brand-900/[0.06] p-6">
-              <r.icon size={18} className="text-accent-500 mb-4"/>
-              <p className="font-medium text-[15px] mb-1.5">{r.titulo}</p>
+              <r.icon size={18} className="text-accent-500 mb-4" />
+              <p className="font-semibold text-[15px] mb-1.5">{r.titulo}</p>
               <p className="text-sm text-brand-900/55 leading-relaxed">{r.texto}</p>
             </div>
           ))}
         </div>
       </section>
 
-      <section className="bg-brand-900 py-20 md:py-28">
+      {/* ===================== SEM VS COM (dark) ===================== */}
+      <section className="py-20 md:py-28"
+        style={{ background: 'radial-gradient(120% 120% at 80% 0%, #12305c 0%, #0a1c3a 55%, #061224 100%)' }}>
         <div className="max-w-5xl mx-auto px-6">
           <div className="text-center mb-12 max-w-xl mx-auto">
             <h2 className="font-display font-semibold text-3xl md:text-4xl text-white mb-3">
@@ -243,20 +270,20 @@ export default function LandingPage() {
           </div>
 
           <div className="bg-white/[0.03] border border-white/10 rounded-2xl overflow-hidden">
-            <div className="grid grid-cols-3 text-xs md:text-sm font-medium">
+            <div className="grid grid-cols-3 text-xs md:text-sm font-semibold">
               <div className="px-4 md:px-6 py-4 text-white/50">Desafio</div>
               <div className="px-4 md:px-6 py-4 text-white/50 border-l border-white/10">Sem o LexRun</div>
-              <div className="px-4 md:px-6 py-4 text-gold-400 border-l border-white/10 bg-white/[0.03]">Com o LexRun</div>
+              <div className="px-4 md:px-6 py-4 text-gold-300 border-l border-white/10 bg-white/[0.03]">Com o LexRun</div>
             </div>
             {SEM_VS_COM.map((linha, i) => (
               <div key={i} className="grid grid-cols-3 text-xs md:text-sm border-t border-white/[0.07]">
                 <div className="px-4 md:px-6 py-4 text-white font-medium">{linha.desafio}</div>
                 <div className="px-4 md:px-6 py-4 text-white/55 border-l border-white/10 flex items-start gap-2">
-                  <X size={14} className="text-red-400/70 flex-shrink-0 mt-0.5"/>
+                  <X size={14} className="text-red-400/70 flex-shrink-0 mt-0.5" />
                   <span>{linha.sem}</span>
                 </div>
                 <div className="px-4 md:px-6 py-4 text-white/85 border-l border-white/10 bg-white/[0.03] flex items-start gap-2">
-                  <Check size={14} className="text-accent-400 flex-shrink-0 mt-0.5"/>
+                  <Check size={14} className="text-accent-400 flex-shrink-0 mt-0.5" />
                   <span>{linha.com}</span>
                 </div>
               </div>
@@ -265,24 +292,26 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* ===================== PLANOS ===================== */}
       <section id="planos" className="max-w-6xl mx-auto px-6 py-20 md:py-28">
         <div className="text-center mb-14 max-w-xl mx-auto">
           <h2 className="font-display font-semibold text-3xl md:text-4xl mb-3">Um plano para cada fase da banca</h2>
           <p className="text-brand-900/60">Cancele quando quiser. Sem multa, sem letra miúda.</p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto items-start">
           {(planos || [{ chave: 'basico', nome: 'Básico', valor: 97 }, { chave: 'professional', nome: 'Professional', valor: 197 }, { chave: 'banca', nome: 'Banca', valor: 397 }]).map(plano => {
             const destaque = plano.chave === 'professional'
             return (
               <div key={plano.chave}
-                className={`rounded-2xl p-7 relative ${destaque ? 'bg-brand-900 text-white' : 'bg-white border border-brand-900/[0.07]'}`}>
+                className={`rounded-2xl p-7 relative ${destaque ? 'text-white shadow-[0_30px_60px_-24px_rgba(10,28,58,0.55)]' : 'bg-white border border-brand-900/[0.07]'}`}
+                style={destaque ? { background: 'linear-gradient(160deg,#0d2241,#0a1c3a)', border: '1px solid rgba(212,175,55,.4)' } : undefined}>
                 {destaque && (
-                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gold-500 text-brand-900 text-[10px] font-medium px-3 py-1 rounded-full whitespace-nowrap">
+                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gold-400 text-brand-900 text-[10px] font-semibold px-3 py-1 rounded-full whitespace-nowrap">
                     Mais escolhido
                   </span>
                 )}
-                <p className={`text-sm font-medium mb-1 ${destaque ? 'text-white' : 'text-brand-900'}`}>{plano.nome}</p>
+                <p className={`text-sm font-semibold mb-1 ${destaque ? 'text-white' : 'text-brand-900'}`}>{plano.nome}</p>
                 <div className="flex items-baseline gap-1 mb-2">
                   <span className={`font-display text-4xl font-semibold ${destaque ? 'text-white' : 'text-brand-900'}`}>R${plano.valor}</span>
                   <span className={`text-sm ${destaque ? 'text-white/50' : 'text-brand-900/40'}`}>/mês</span>
@@ -299,20 +328,21 @@ export default function LandingPage() {
                           : (destaque ? 'text-white/30' : 'text-brand-900/25')
                       }`}>
                       {f.emBreve
-                        ? <Clock size={12} className={`flex-shrink-0 ${destaque ? 'text-gold-400' : 'text-amber-400'}`}/>
+                        ? <Clock size={12} className={`flex-shrink-0 ${destaque ? 'text-gold-300' : 'text-amber-400'}`} />
                         : f.ok
-                        ? <Check size={12} className={`flex-shrink-0 ${destaque ? 'text-gold-500' : 'text-accent-600'}`}/>
-                        : <X size={12} className={`flex-shrink-0 ${destaque ? 'text-white/25' : 'text-brand-900/15'}`}/>
+                        ? <Check size={12} className={`flex-shrink-0 ${destaque ? 'text-gold-400' : 'text-accent-600'}`} />
+                        : <X size={12} className={`flex-shrink-0 ${destaque ? 'text-white/25' : 'text-brand-900/15'}`} />
                       }
-                      <span>{f.label}{f.emBreve && <span className={`ml-1 ${destaque ? 'text-gold-400' : 'text-amber-500'}`}>(em breve)</span>}</span>
+                      <span>{f.label}{f.emBreve && <span className={`ml-1 ${destaque ? 'text-gold-300' : 'text-amber-500'}`}>(em breve)</span>}</span>
                     </li>
                   ))}
                 </ul>
                 <button onClick={() => navigate(`/comecar?plano=${plano.chave}`)}
-                  className={`w-full py-2.5 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-1.5 ${
-                    destaque ? 'bg-white text-brand-900 hover:bg-gold-100' : 'bg-brand-900 text-white hover:bg-brand-700'
-                  }`}>
-                  Assinar {plano.nome} <ArrowRight size={13}/>
+                  className={`w-full py-2.5 rounded-lg text-sm font-semibold transition-colors flex items-center justify-center gap-1.5 ${
+                    destaque ? '' : 'bg-brand-900 text-white hover:bg-brand-700'
+                  }`}
+                  style={destaque ? { background: 'linear-gradient(135deg,#e0bd55,#c39a2e)', color: '#1a1304' } : undefined}>
+                  Assinar {plano.nome} <ArrowRight size={13} />
                 </button>
               </div>
             )
@@ -323,7 +353,8 @@ export default function LandingPage() {
         </p>
       </section>
 
-      <section id="faq" className="max-w-3xl mx-auto px-6 py-20 md:py-28">
+      {/* ===================== FAQ ===================== */}
+      <section id="faq" className="max-w-3xl mx-auto px-6 py-16 md:py-24">
         <h2 className="font-display font-semibold text-3xl mb-10 text-center">Perguntas frequentes</h2>
         <div className="space-y-7">
           {[
@@ -336,31 +367,37 @@ export default function LandingPage() {
             ['Tenho cupom de desconto, onde aplico?', 'No Checkout, antes de confirmar o pagamento, há um campo para inserir o código promocional.'],
           ].map(([p, r]) => (
             <div key={p} className="border-b border-brand-900/[0.07] pb-6">
-              <p className="font-medium mb-1.5">{p}</p>
+              <p className="font-semibold mb-1.5">{p}</p>
               <p className="text-sm text-brand-900/55 leading-relaxed">{r}</p>
             </div>
           ))}
         </div>
       </section>
 
+      {/* ===================== FINAL CTA ===================== */}
       <section className="max-w-6xl mx-auto px-6 pb-24">
-        <div className="bg-brand-900 rounded-3xl px-8 py-16 md:py-20 text-center relative overflow-hidden">
-          <h2 className="font-display font-semibold text-3xl md:text-4xl text-white mb-4">
-            Sua próxima audiência já tem prazo. <br className="hidden md:block"/>Seu sistema também devia ter.
+        <div className="relative overflow-hidden rounded-[28px] px-8 py-16 md:py-20 text-center"
+          style={{ background: 'radial-gradient(120% 140% at 50% 0%, #14315c 0%, #0a1c3a 60%)' }}>
+          <div className="absolute -top-24 left-1/2 -translate-x-1/2 w-[480px] h-[300px] pointer-events-none"
+            style={{ background: 'radial-gradient(circle, rgba(212,175,55,.16) 0%, rgba(212,175,55,0) 70%)' }} />
+          <h2 className="relative font-display font-semibold text-3xl md:text-4xl text-white mb-6 leading-snug">
+            Sua próxima audiência já tem prazo. <br className="hidden md:block" />Seu sistema também devia ter.
           </h2>
           <button onClick={() => navigate('/comecar')}
-            className="bg-white text-brand-900 px-7 py-3.5 rounded-xl text-sm font-medium hover:bg-gold-100 transition-colors inline-flex items-center gap-2 mt-6">
-            Criar minha conta agora <ArrowRight size={15}/>
+            className="relative px-7 py-3.5 rounded-xl text-sm font-semibold inline-flex items-center gap-2 transition-transform hover:-translate-y-0.5"
+            style={{ background: 'linear-gradient(135deg,#e0bd55,#c39a2e)', color: '#1a1304', boxShadow: '0 16px 34px -14px rgba(212,175,55,.6)' }}>
+            Criar minha conta agora <ArrowRight size={15} />
           </button>
         </div>
       </section>
 
+      {/* ===================== FOOTER ===================== */}
       <footer className="border-t border-brand-900/[0.07] bg-paper">
         <div className="max-w-6xl mx-auto px-6 py-14">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-12">
             <div className="col-span-2 md:col-span-1">
-              <img src={lexrunLogo} alt="LexRun" className="h-24 w-auto object-contain scale-110"  />
-              <p className="text-xs text-brand-900/50 leading-relaxed max-w-[200px]">
+              <div className="mb-3"><LexRunSeal size={30} /></div>
+              <p className="text-xs text-brand-900/50 leading-relaxed max-w-[210px]">
                 Gestão jurídica completa para escritórios de advocacia, do início ao encerramento do processo.
               </p>
             </div>
