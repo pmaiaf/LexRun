@@ -1,11 +1,14 @@
 import { useState, useEffect } from 'react'
 import { Plus, MapPin, Clock, ChevronLeft, ChevronRight, Trash2, User, Pencil } from 'lucide-react'
+import { useAuth } from '../contexts/AuthContext.jsx'
 import { useApi, useAction } from '../hooks/useApi.js'
 import { DicaDaTela } from '../components/Onboarding.jsx'
 import { agendaService, clientesService } from '../services/api.js'
 import { LoadingScreen, ErrorBlock, Modal, FormField, useToast, ConfirmDialog, EmptyState } from '../components/ui/index.jsx'
 
 const TIPO_COLOR = {
+  Tarefa:    'bg-purple-50 text-purple-700 border-purple-100',
+  Evento:    'bg-blue-50 text-blue-700 border-blue-100',
   Audiência: 'bg-red-50 text-red-700 border-red-100',
   Prazo:     'bg-amber-50 text-amber-700 border-amber-100',
   Reunião:   'bg-blue-50 text-blue-700 border-blue-100',
@@ -24,6 +27,7 @@ function getMiniCal(year, month) {
 }
 
 export default function AgendaPage() {
+  const { user } = useAuth()
   const toast = useToast()
   const [mes, setMes] = useState(new Date().getMonth())
   const [ano, setAno] = useState(new Date().getFullYear())
@@ -93,7 +97,7 @@ export default function AgendaPage() {
         await agendaService.atualizar(editId, { ...form, cliente_id: form.cliente_id || null })
         toast.success('Evento atualizado!')
       } else {
-        await agendaService.criar({ ...form, cliente_id: form.cliente_id || undefined })
+        await agendaService.criar({ ...form, cliente_id: form.cliente_id || undefined, responsavel_id: user?.id, status: 'a_fazer' })
         toast.success('Evento criado!')
       }
       fecharModal(); refetch()
@@ -193,7 +197,7 @@ export default function AgendaPage() {
           <FormField label="Título" required><input className="input" value={form.titulo} onChange={e=>setForm(f=>({...f,titulo:e.target.value}))} required /></FormField>
           <div className="grid grid-cols-2 gap-3">
             <FormField label="Data e hora" required><input type="datetime-local" className="input" value={form.data_hora} onChange={e=>setForm(f=>({...f,data_hora:e.target.value}))} required /></FormField>
-            <FormField label="Tipo"><select className="input" value={form.tipo} onChange={e=>setForm(f=>({...f,tipo:e.target.value}))}>{['Audiência','Prazo','Reunião','Outros'].map(t=><option key={t}>{t}</option>)}</select></FormField>
+            <FormField label="Tipo"><select className="input" value={form.tipo} onChange={e=>setForm(f=>({...f,tipo:e.target.value}))}>{['Tarefa','Evento','Audiência','Prazo','Reunião','Outros'].map(t=><option key={t}>{t}</option>)}</select></FormField>
           </div>
           <FormField label="Local"><input className="input" value={form.local} onChange={e=>setForm(f=>({...f,local:e.target.value}))} placeholder="Ex: 1ª Vara Cível, Videoconferência..." /></FormField>
           <FormField label="Vincular a um cliente (opcional)">

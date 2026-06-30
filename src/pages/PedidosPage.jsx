@@ -24,6 +24,7 @@ const TIPO_LABEL = Object.fromEntries(TIPOS.map(t => [t.value, t.label]))
 const AREAS = ['Trabalhista', 'Previdenciário', 'Criminal', 'Administrativo', 'Cível', 'Tributário', 'Ambiental', 'Eleitoral']
 const UFS = ['AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA', 'MT', 'MS', 'MG', 'PA', 'PB', 'PR', 'PE', 'PI', 'RJ', 'RN', 'RS', 'RO', 'RR', 'SC', 'SP', 'SE', 'TO']
 
+// Subárea existe SOMENTE para Cível.
 const SUBAREAS = {
   'Cível': ['Consumidor', 'Obrigações', 'Contratuais', 'Sucessões', 'Empresarial', 'Possessórias', 'Imobiliário', 'Responsabilidade Civil', 'Família'],
 }
@@ -33,17 +34,31 @@ const TIPOS_PETICAO = ['Inicial', 'Contestação', 'Manifestação', 'Recursos',
 const PETICAO_PUBLICACAO = ['Manifestação', 'Recursos', 'Contrarrazões']
 const PETICAO_GRATUITA_2N = ['Recursos', 'Contrarrazões']
 
-// Tipos de parte por serviço (Parecer usa Parte 01/02 fixas).
+// Tipos de parte por serviço — sem "Outro". Lista dinâmica em todos.
 const PARTES = {
-  peticao:   { modo: 'dinamica', tipos: ['Autor', 'Réu', 'Terceiro Interessado', 'Outro'] },
-  contrato:  { modo: 'dinamica', tipos: ['Contratante', 'Contratada', 'Interveniente', 'Outro'] },
-  indicacao: { modo: 'dinamica', tipos: ['Autor', 'Réu', 'Outro'] },
-  parecer:   { modo: 'fixa2' },
+  peticao:   ['Autor', 'Réu'],
+  contrato:  ['Contratante', 'Contratada'],
+  parecer:   ['Parte 01', 'Parte 02'],
+  indicacao: ['Parte 01', 'Parte 02'],
 }
+const tiposParte = (s) => PARTES[s] || ['Parte 01', 'Parte 02']
 
 const SIM_NAO = ['Sim', 'Não']
 
-// ── Campos do passo "Serviço" (dados do processo, condicionais) ────────────────
+// Rótulos para exibição (detalhes) e cabe ao backend o do prompt.
+const ROTULOS = {
+  tipo_peticao: 'Tipo de petição', numero_processo: 'Número do processo', competencia: 'Competência',
+  comarca_uf: 'Comarca (UF)', comarca_cidade: 'Comarca (cidade)', justica_gratuita: 'Justiça gratuita',
+  tipo_acao: 'Tipo de ação', pedido_cumulado: 'Pedido cumulado', houve_citacao: 'Houve citação do réu',
+  data_citacao: 'Data da citação', data_publicacao: 'Data da publicação', preliminares: 'Preliminares',
+  prejudiciais: 'Prejudiciais de mérito', topicos: 'Tópicos imprescindíveis', tutela_urgencia: 'Tutela de urgência',
+  reconvencao: 'Reconvenção/contraposto', tipo_contrato: 'Tipo de contrato', contrato_desejado: 'Contrato desejado',
+  remuneracao: 'Remuneração', prazo_contrato: 'Prazo de duração', clausula_resolutiva: 'Cláusula resolutiva',
+  confidencialidade: 'Confidencialidade', direitos_deveres: 'Direitos e deveres', condicoes_gerais: 'Condições gerais',
+  extincao_rescisao: 'Extinção e rescisão', solucao_conflito: 'Solução de conflito', foro: 'Foro', timbrado: 'Usar timbrado',
+}
+
+// ── Campos do passo "Serviço" (condicionais) ──────────────────────────────────
 function camposServico(tipo, campos) {
   if (tipo === 'peticao') {
     const tp = campos.tipo_peticao
@@ -55,7 +70,7 @@ function camposServico(tipo, campos) {
       f.push(
         { key: 'competencia', label: 'Competência', type: 'select', options: COMPETENCIAS },
         { key: 'comarca_uf', label: 'Comarca — UF', type: 'select', options: UFS },
-        { key: 'comarca_cidade', label: 'Comarca — Cidade', type: 'text' },
+        { key: 'comarca_cidade', label: 'Comarca — Cidade', type: 'cidade' },
         { key: 'justica_gratuita', label: 'Requerer justiça gratuita?', type: 'radio', options: SIM_NAO },
         { key: 'tipo_acao', label: 'Qual o tipo de ação que deseja?', type: 'text' },
         { key: 'pedido_cumulado', label: 'Tem pedido cumulado?', type: 'radio', options: SIM_NAO },
@@ -72,13 +87,12 @@ function camposServico(tipo, campos) {
   }
   if (tipo === 'contrato') {
     return [{ key: 'tipo_contrato', label: 'Tipo de contrato', type: 'select',
-      options: ['Prestação de Serviços', 'Compra e Venda', 'Locação', 'Confidencialidade (NDA)', 'Sociedade', 'Honorários Advocatícios', 'Distrato', 'Outro'] }]
+      options: ['Prestação de Serviços', 'Compra e Venda', 'Locação', 'Confidencialidade (NDA)', 'Sociedade', 'Honorários Advocatícios', 'Distrato'] }]
   }
-  // parecer / indicacao
   return [{ key: 'numero_processo', label: 'Número do processo (se houver)', type: 'text', placeholder: 'Se aplicável' }]
 }
 
-// ── Campos do passo "Caso" (por serviço) ───────────────────────────────────────
+// ── Campos do passo "Caso" ─────────────────────────────────────────────────────
 function camposCaso(tipo) {
   if (tipo === 'peticao') {
     return [
@@ -122,7 +136,6 @@ function camposCaso(tipo) {
       { bind: 'advogado_subscritor', label: 'Advogado subscritor', type: 'text', placeholder: 'Nome e OAB' },
     ]
   }
-  // indicacao
   return [
     { bind: 'descricao', label: 'Nos conte um pouco sobre o caso', type: 'textarea', required: true,
       placeholder: 'Uma breve visão do processo. Aqui identificamos a petição cabível ao caso.' },
@@ -219,53 +232,55 @@ export default function PedidosPage() {
   })
 
   return (
-    <div className="max-w-5xl mx-auto">
-      <div className="flex flex-wrap items-center justify-between gap-3 mb-5">
-        <div>
-          <h1 className="text-xl font-semibold text-gray-900 flex items-center gap-2"><Sparkles size={20} className="text-brand-700" /> Pedidos</h1>
-          <p className="text-sm text-gray-500 mt-0.5">Solicite petições, pareceres e contratos.</p>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="flex items-center gap-1.5 bg-brand-50 text-brand-800 rounded-lg px-3 py-2 text-sm font-medium">
-            <Coins size={15} /> {saldo} crédito{saldo === 1 ? '' : 's'}
+    <div className="p-6">
+      <div className="max-w-5xl mx-auto">
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-5">
+          <div>
+            <h1 className="text-xl font-semibold text-gray-900 flex items-center gap-2"><Sparkles size={20} className="text-brand-700" /> Pedidos</h1>
+            <p className="text-sm text-gray-500 mt-0.5">Solicite petições, pareceres e contratos.</p>
           </div>
-          {modoTeste && ehSocio && (
-            <button onClick={concederTeste} className="btn-secondary !py-2 flex items-center gap-1.5" title="Modo de teste"><Gift size={15} /> Teste</button>
-          )}
-          {ehSocio && (
-            <button onClick={() => setCompraAberta(true)} className="btn-secondary !py-2 flex items-center gap-1.5"><ShoppingCart size={15} /> Comprar</button>
-          )}
-          <button onClick={abrirNova} className="btn-primary !py-2 flex items-center gap-1.5"><Plus size={16} /> Nova Solicitação</button>
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5 bg-brand-50 text-brand-800 rounded-lg px-3 py-2 text-sm font-medium">
+              <Coins size={15} /> {saldo} crédito{saldo === 1 ? '' : 's'}
+            </div>
+            {modoTeste && ehSocio && (
+              <button onClick={concederTeste} className="btn-secondary !py-2 flex items-center gap-1.5" title="Modo de teste"><Gift size={15} /> Teste</button>
+            )}
+            {ehSocio && (
+              <button onClick={() => setCompraAberta(true)} className="btn-secondary !py-2 flex items-center gap-1.5"><ShoppingCart size={15} /> Comprar</button>
+            )}
+            <button onClick={abrirNova} className="btn-primary !py-2 flex items-center gap-1.5"><Plus size={16} /> Nova Solicitação</button>
+          </div>
         </div>
-      </div>
 
-      {modoTeste && (
-        <div className="mb-4 text-xs bg-amber-50 text-amber-700 border border-amber-100 rounded-lg px-3 py-2 flex items-center gap-2">
-          <AlertTriangle size={14} /> Modo de teste ativo — prazos reduzidos e créditos de teste liberados. Desative em produção.
-        </div>
-      )}
+        {modoTeste && (
+          <div className="mb-4 text-xs bg-amber-50 text-amber-700 border border-amber-100 rounded-lg px-3 py-2 flex items-center gap-2">
+            <AlertTriangle size={14} /> Modo de teste ativo — prazos reduzidos e créditos de teste liberados. Desative em produção.
+          </div>
+        )}
 
-      <div className="flex items-center gap-1 border-b border-gray-100 mb-4">
-        {ABAS.map(({ key, label }) => (
-          <button key={key} onClick={() => setAba(key)}
-            className={`px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors ${aba === key ? 'border-brand-700 text-brand-800' : 'border-transparent text-gray-500 hover:text-gray-700'}`}>
-            {label} <span className="text-gray-400">{contagens[key] ?? 0}</span>
-          </button>
-        ))}
-      </div>
-
-      {pedidos.length === 0 ? (
-        <EmptyState icon={FileText} title="Nada por aqui ainda"
-          subtitle={aba === 'rascunho' ? 'Rascunhos não confirmados aparecem aqui.' : aba === 'andamento' ? 'Solicitações em andamento ou aguardando liberação.' : 'Documentos prontos para download.'}
-          action={aba !== 'concluido' ? <button onClick={abrirNova} className="btn-primary">Nova Solicitação</button> : null} />
-      ) : (
-        <div className="space-y-2.5">
-          {pedidos.map(p => (
-            <PedidoCard key={p.id} p={p} restante={restante(p)}
-              onVer={() => setVerPedido(p)} onContinuar={() => continuarRascunho(p)} onExcluir={() => setConfirmDel(p)} />
+        <div className="flex items-center gap-1 border-b border-gray-100 mb-4">
+          {ABAS.map(({ key, label }) => (
+            <button key={key} onClick={() => setAba(key)}
+              className={`px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors ${aba === key ? 'border-brand-700 text-brand-800' : 'border-transparent text-gray-500 hover:text-gray-700'}`}>
+              {label} <span className="text-gray-400">{contagens[key] ?? 0}</span>
+            </button>
           ))}
         </div>
-      )}
+
+        {pedidos.length === 0 ? (
+          <EmptyState icon={FileText} title="Nada por aqui ainda"
+            subtitle={aba === 'rascunho' ? 'Rascunhos não confirmados aparecem aqui.' : aba === 'andamento' ? 'Solicitações em andamento ou aguardando liberação.' : 'Documentos prontos para download.'}
+            action={aba !== 'concluido' ? <button onClick={abrirNova} className="btn-primary">Nova Solicitação</button> : null} />
+        ) : (
+          <div className="space-y-2.5">
+            {pedidos.map(p => (
+              <PedidoCard key={p.id} p={p} restante={restante(p)}
+                onVer={() => setVerPedido(p)} onContinuar={() => continuarRascunho(p)} onExcluir={() => setConfirmDel(p)} />
+            ))}
+          </div>
+        )}
+      </div>
 
       {novaAberta && (
         <NovaSolicitacao open={novaAberta} onClose={() => setNovaAberta(false)}
@@ -275,7 +290,7 @@ export default function PedidosPage() {
           onRascunhoSalvo={() => { setNovaAberta(false); setAba('rascunho'); refetchAll() }} />
       )}
       {compraAberta && <CompraCreditos open={compraAberta} onClose={() => setCompraAberta(false)} packs={packs} />}
-      {verPedido && <VerPedido pedido={verPedido} onClose={() => setVerPedido(null)} />}
+      {verPedido && <DetalhesPedido pedido={verPedido} restante={restante(verPedido)} onClose={() => setVerPedido(null)} />}
       <ConfirmDialog open={!!confirmDel} onClose={() => setConfirmDel(null)} onConfirm={() => excluir(confirmDel)} danger
         title="Excluir rascunho?" description="Esta ação não pode ser desfeita." />
     </div>
@@ -284,6 +299,7 @@ export default function PedidosPage() {
 
 function PedidoCard({ p, restante, onVer, onContinuar, onExcluir }) {
   const tier = TIERS[p.tier] || TIERS.padrao
+  const clicavel = p.status !== 'rascunho'
   let badge
   if (p.status === 'rascunho') badge = <span className="badge-gray">Rascunho</span>
   else if (p.status === 'processando') badge = <span className="badge-blue flex items-center gap-1"><Loader2 size={11} className="animate-spin" /> Em andamento…</span>
@@ -292,7 +308,8 @@ function PedidoCard({ p, restante, onVer, onContinuar, onExcluir }) {
   else badge = <span className="badge-amber flex items-center gap-1"><Clock size={11} /> Disponível em {formatCountdown(restante)}</span>
 
   return (
-    <div className="card p-4 flex items-center justify-between gap-4">
+    <div onClick={clicavel ? onVer : undefined}
+      className={`card p-4 flex items-center justify-between gap-4 ${clicavel ? 'cursor-pointer hover:border-brand-200 transition-colors' : ''}`}>
       <div className="min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
           <span className="font-medium text-gray-900 text-[15px]">{TIPO_LABEL[p.tipo_servico] || p.tipo_servico}</span>
@@ -312,14 +329,15 @@ function PedidoCard({ p, restante, onVer, onContinuar, onExcluir }) {
       </div>
       <div className="flex items-center gap-2 flex-shrink-0">
         {badge}
-        {p.status === 'rascunho' && (
+        {p.status === 'rascunho' ? (
           <>
             <button onClick={onContinuar} className="btn-secondary !py-1.5 !px-3 text-sm">Continuar</button>
             <button onClick={onExcluir} className="text-gray-300 hover:text-red-500 p-1.5" title="Excluir"><Trash2 size={15} /></button>
           </>
-        )}
-        {p.disponivel && (
-          <button onClick={onVer} className="btn-primary !py-1.5 !px-3 text-sm flex items-center gap-1.5"><Eye size={14} /> Ver / Baixar</button>
+        ) : p.disponivel ? (
+          <button onClick={(e) => { e.stopPropagation(); onVer() }} className="btn-primary !py-1.5 !px-3 text-sm flex items-center gap-1.5"><Eye size={14} /> Ver / Baixar</button>
+        ) : (
+          <ChevronRight size={16} className="text-gray-300" />
         )}
       </div>
     </div>
@@ -357,43 +375,37 @@ function NovaSolicitacao({ open, onClose, rascunho, saldo, ehSocio, defaultAdvog
 
   const fieldsServico = camposServico(form.tipo_servico, campos)
   const fieldsCaso    = camposCaso(form.tipo_servico)
-  const partesCfg     = PARTES[form.tipo_servico] || PARTES.peticao
+  const tipos         = tiposParte(form.tipo_servico)
 
   const totalAnexos = anexosServer.length + pendentes.length
   const needed = TIERS[form.tier].creditos
   const temSaldo = saldo >= needed
 
-  // Ao trocar de serviço, limpa campos que não pertencem mais e reajusta partes.
+  // Troca de serviço → limpa campos órfãos e reajusta o tipo das partes.
   useEffect(() => {
-    const validas = new Set(camposServico(form.tipo_servico, {}).map(c => c.key)
-      .concat(camposServico(form.tipo_servico, { tipo_peticao: 'Inicial' }).map(c => c.key))
-      .concat(camposServico(form.tipo_servico, { tipo_peticao: 'Contestação' }).map(c => c.key))
-      .concat(camposServico(form.tipo_servico, { tipo_peticao: 'Recursos' }).map(c => c.key))
-      .concat(camposCaso(form.tipo_servico).filter(c => c.key).map(c => c.key)))
+    const validas = new Set(
+      camposServico(form.tipo_servico, { tipo_peticao: 'Inicial' }).map(c => c.key)
+        .concat(camposServico(form.tipo_servico, { tipo_peticao: 'Contestação' }).map(c => c.key))
+        .concat(camposServico(form.tipo_servico, { tipo_peticao: 'Recursos' }).map(c => c.key))
+        .concat(camposCaso(form.tipo_servico).filter(c => c.key).map(c => c.key))
+    )
     setCampos(c => Object.fromEntries(Object.entries(c).filter(([k]) => validas.has(k))))
-    const cfg = PARTES[form.tipo_servico] || PARTES.peticao
-    if (cfg.modo === 'fixa2') setPartes(ps => normalizarFixa2(ps))
-    else setPartes(ps => ps.filter(p => p.tipo !== 'Parte 1' && p.tipo !== 'Parte 2').map(p => cfg.tipos.includes(p.tipo) ? p : { ...p, tipo: cfg.tipos[0] }))
+    const opts = tiposParte(form.tipo_servico)
+    setPartes(ps => ps.map(p => (opts.includes(p.tipo) ? p : { ...p, tipo: opts[0] })))
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [form.tipo_servico])
 
+  // Troca de área → subárea só existe no Cível; limpa se não se aplica.
   useEffect(() => {
     const opts = SUBAREAS[form.area]
-    if (opts && form.sub_area && !opts.includes(form.sub_area)) set('sub_area', '')
+    if (!opts || (form.sub_area && !opts.includes(form.sub_area))) set('sub_area', '')
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [form.area])
 
-  // Partes
-  const addParte = () => setPartes(ps => [...ps, { nome: '', tipo: partesCfg.tipos[0], representada: false }])
+  const addParte = () => setPartes(ps => [...ps, { nome: '', tipo: tipos[0], representada: false }])
   const setParte = (i, k, v) => setPartes(ps => ps.map((p, idx) => idx === i ? { ...p, [k]: v } : p))
   const rmParte = (i) => setPartes(ps => ps.filter((_, idx) => idx !== i))
-  const setFixa = (idx, nome) => setPartes(ps => {
-    const base = normalizarFixa2(ps)
-    base[idx] = { ...base[idx], nome }
-    return base
-  })
 
-  // Anexos
   const onPickFiles = (e) => {
     const files = Array.from(e.target.files || [])
     const livres = MAX_ANEXOS - totalAnexos
@@ -446,8 +458,6 @@ function NovaSolicitacao({ open, onClose, rascunho, saldo, ehSocio, defaultAdvog
     onError: (m) => { if (/insuficiente/i.test(m)) { toast.error('Créditos insuficientes.'); onComprar() } else toast.error(m) },
   })
 
-  const fixas = normalizarFixa2(partes)
-
   return (
     <Modal open={open} onClose={onClose} title={rascunho ? 'Continuar solicitação' : 'Nova Solicitação'} size="lg">
       <div className="flex items-center gap-2 mb-5">
@@ -480,9 +490,8 @@ function NovaSolicitacao({ open, onClose, rascunho, saldo, ehSocio, defaultAdvog
               </FormField>
             </div>
 
-            <SubareaField key={form.area} area={form.area} value={form.sub_area} onChange={v => set('sub_area', v)} />
+            <SubareaField area={form.area} value={form.sub_area} onChange={v => set('sub_area', v)} />
 
-            {/* Serviços adicionais (Cálculo em breve) */}
             <div>
               <label className="text-sm font-medium text-gray-700 mb-1.5 block">Serviços adicionais</label>
               <label className="flex items-center gap-2 text-sm text-gray-400 cursor-not-allowed select-none">
@@ -491,50 +500,44 @@ function NovaSolicitacao({ open, onClose, rascunho, saldo, ehSocio, defaultAdvog
               </label>
             </div>
 
-            {fieldsServico.map(f => <CampoDinamico key={f.key} f={f} value={getVal(f)} onChange={(v) => setVal(f, v)} />)}
+            {fieldsServico.map(f => f.type === 'cidade'
+              ? <CidadeField key={f.key} uf={campos.comarca_uf} value={campos.comarca_cidade || ''} onChange={v => setCampo('comarca_cidade', v)} />
+              : <CampoDinamico key={f.key} f={f} value={getVal(f)} onChange={v => setVal(f, v)} />)}
           </div>
         )}
 
-        {/* PASSO 2 — Partes */}
+        {/* PASSO 2 — Partes (dinâmica em todos os serviços) */}
         {passo === 1 && (
-          partesCfg.modo === 'fixa2' ? (
-            <div className="space-y-4">
-              <p className="text-sm text-gray-500">Informe as partes do processo.</p>
-              <FormField label="Parte 01"><input className="input" value={fixas[0].nome} onChange={e => setFixa(0, e.target.value)} placeholder="Nome da Parte 01" /></FormField>
-              <FormField label="Parte 02"><input className="input" value={fixas[1].nome} onChange={e => setFixa(1, e.target.value)} placeholder="Nome da Parte 02" /></FormField>
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-sm text-gray-500">Quem são as partes no processo?</p>
+              <button type="button" onClick={addParte} className="btn-ghost flex items-center gap-1 text-xs"><Plus size={13} /> Adicionar parte</button>
             </div>
-          ) : (
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <p className="text-sm text-gray-500">Quem são as partes no processo?</p>
-                <button type="button" onClick={addParte} className="btn-ghost flex items-center gap-1 text-xs"><Plus size={13} /> Adicionar parte</button>
+            {partes.length === 0 ? (
+              <div className="text-center py-10 text-sm text-gray-400">Nenhuma parte adicionada. Clique em "Adicionar parte".</div>
+            ) : (
+              <div className="space-y-2">
+                {partes.map((p, i) => (
+                  <div key={i} className="flex flex-wrap items-center gap-2">
+                    <input className="input flex-1 min-w-[180px]" placeholder="Nome completo da parte" value={p.nome} onChange={e => setParte(i, 'nome', e.target.value)} />
+                    <select className="input !w-44" value={p.tipo} onChange={e => setParte(i, 'tipo', e.target.value)}>
+                      {tipos.map(t => <option key={t} value={t}>{t}</option>)}
+                    </select>
+                    <label className="flex items-center gap-1.5 text-xs text-gray-600 cursor-pointer whitespace-nowrap">
+                      <input type="checkbox" checked={!!p.representada} onChange={e => setParte(i, 'representada', e.target.checked)} className="accent-brand-700" /> É representada
+                    </label>
+                    <button type="button" onClick={() => rmParte(i)} className="text-gray-300 hover:text-red-500 p-1"><X size={16} /></button>
+                  </div>
+                ))}
               </div>
-              {partes.length === 0 ? (
-                <div className="text-center py-10 text-sm text-gray-400">Nenhuma parte adicionada. (Opcional)</div>
-              ) : (
-                <div className="space-y-2">
-                  {partes.map((p, i) => (
-                    <div key={i} className="flex flex-wrap items-center gap-2">
-                      <input className="input flex-1 min-w-[180px]" placeholder="Nome completo da parte" value={p.nome} onChange={e => setParte(i, 'nome', e.target.value)} />
-                      <select className="input !w-44" value={p.tipo} onChange={e => setParte(i, 'tipo', e.target.value)}>
-                        {partesCfg.tipos.map(t => <option key={t} value={t}>{t}</option>)}
-                      </select>
-                      <label className="flex items-center gap-1.5 text-xs text-gray-600 cursor-pointer whitespace-nowrap">
-                        <input type="checkbox" checked={!!p.representada} onChange={e => setParte(i, 'representada', e.target.checked)} className="accent-brand-700" /> É representada
-                      </label>
-                      <button type="button" onClick={() => rmParte(i)} className="text-gray-300 hover:text-red-500 p-1"><X size={16} /></button>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          )
+            )}
+          </div>
         )}
 
         {/* PASSO 3 — Caso + anexos */}
         {passo === 2 && (
           <div className="space-y-4">
-            {fieldsCaso.map(f => <CampoDinamico key={f.bind || f.key} f={f} value={getVal(f)} onChange={(v) => setVal(f, v)} />)}
+            {fieldsCaso.map(f => <CampoDinamico key={f.bind || f.key} f={f} value={getVal(f)} onChange={v => setVal(f, v)} />)}
 
             <div>
               <div className="flex items-center justify-between mb-1.5">
@@ -610,15 +613,7 @@ function NovaSolicitacao({ open, onClose, rascunho, saldo, ehSocio, defaultAdvog
   )
 }
 
-function normalizarFixa2(ps) {
-  const arr = Array.isArray(ps) ? ps.slice(0, 2) : []
-  return [
-    { nome: arr[0]?.nome || '', tipo: 'Parte 1' },
-    { nome: arr[1]?.nome || '', tipo: 'Parte 2' },
-  ]
-}
-
-// Renderiza um campo do schema conforme o tipo.
+// Renderiza um campo do schema.
 function CampoDinamico({ f, value, onChange }) {
   return (
     <FormField label={f.label} required={f.required}>
@@ -646,6 +641,34 @@ function CampoDinamico({ f, value, onChange }) {
   )
 }
 
+// Cidade carregada do IBGE conforme a UF (com busca por digitação).
+function CidadeField({ uf, value, onChange }) {
+  const [cidades, setCidades] = useState([])
+  const [carregando, setCarregando] = useState(false)
+  useEffect(() => {
+    if (!uf) { setCidades([]); return }
+    let cancel = false
+    setCarregando(true)
+    fetch(`https://servicodados.ibge.gov.br/api/v1/localidades/estados/${uf}/municipios?orderBy=nome`)
+      .then(r => r.json())
+      .then(d => { if (!cancel) setCidades(Array.isArray(d) ? d.map(m => m.nome) : []) })
+      .catch(() => { if (!cancel) setCidades([]) })
+      .finally(() => { if (!cancel) setCarregando(false) })
+    return () => { cancel = true }
+  }, [uf])
+
+  return (
+    <FormField label="Comarca — Cidade">
+      <input className="input" list="lista-cidades-ibge" value={value} disabled={!uf}
+        onChange={e => onChange(e.target.value)}
+        placeholder={!uf ? 'Selecione a UF primeiro' : carregando ? 'Carregando cidades…' : 'Digite ou selecione a cidade'} />
+      <datalist id="lista-cidades-ibge">
+        {cidades.map(c => <option key={c} value={c} />)}
+      </datalist>
+    </FormField>
+  )
+}
+
 function AnexoRow({ nome, mime, pendente, onRemove }) {
   const Icon = /^image\//.test(mime || '') ? ImageIcon : FileIcon
   return (
@@ -658,25 +681,16 @@ function AnexoRow({ nome, mime, pendente, onRemove }) {
   )
 }
 
+// Subárea: SOMENTE Cível, sem "Outra".
 function SubareaField({ area, value, onChange }) {
-  const opts = SUBAREAS[area] || null
-  const [outra, setOutra] = useState(!!value && !!opts && !opts.includes(value))
-  if (!opts) {
-    return (
-      <FormField label="Subárea (opcional)">
-        <input className="input" value={value} onChange={e => onChange(e.target.value)} placeholder="Ex.: Contratual, Indenizatória…" />
-      </FormField>
-    )
-  }
+  const opts = SUBAREAS[area]
+  if (!opts) return null
   return (
     <FormField label="Subárea (opcional)">
-      <select className="input" value={outra ? '__outra__' : (value || '')}
-        onChange={e => { const v = e.target.value; if (v === '__outra__') { setOutra(true); onChange('') } else { setOutra(false); onChange(v) } }}>
+      <select className="input" value={value || ''} onChange={e => onChange(e.target.value)}>
         <option value="">Selecione…</option>
         {opts.map(o => <option key={o} value={o}>{o}</option>)}
-        <option value="__outra__">Outra…</option>
       </select>
-      {outra && <input className="input mt-2" value={value} onChange={e => onChange(e.target.value)} placeholder="Especifique a subárea" />}
     </FormField>
   )
 }
@@ -716,23 +730,104 @@ function CompraCreditos({ open, onClose, packs }) {
   )
 }
 
-function VerPedido({ pedido, onClose }) {
+// ── Detalhes do pedido (somente leitura: não edita nem cancela) ────────────────
+function DetalhesPedido({ pedido, restante, onClose }) {
   const api = useApi(() => pedidosService.detalhe(pedido.id), [pedido.id])
   const p = api.data || pedido
   const baixar = () => window.open(pedidosService.pdfUrl(pedido.id), '_blank')
+
+  const linhas = []
+  if (p.area) linhas.push(['Área', p.area + (p.sub_area ? ` / ${p.sub_area}` : '')])
+  for (const [k, v] of Object.entries(p.campos || {})) {
+    if (v === null || v === undefined || String(v).trim() === '') continue
+    linhas.push([ROTULOS[k] || k, String(v)])
+  }
+  linhas.push(['Prazo', (TIERS[p.tier] || TIERS.padrao).label])
+  if (p.advogado_subscritor) linhas.push(['Advogado subscritor', p.advogado_subscritor])
+
   return (
     <Modal open onClose={onClose} title={`${TIPO_LABEL[p.tipo_servico] || p.tipo_servico}${p.area ? ' — ' + p.area : ''}`} size="lg">
       {api.loading ? (
         <div className="py-10 flex justify-center"><Loader2 className="animate-spin text-brand-700" /></div>
       ) : (
-        <>
-          <div className="flex justify-end mb-3">
-            <button onClick={baixar} className="btn-primary flex items-center gap-1.5"><Download size={15} /> Baixar PDF</button>
+        <div className="space-y-4">
+          {/* Status */}
+          <div className="flex items-center gap-2 text-sm">
+            {p.status === 'erro' ? (
+              <span className="badge-red flex items-center gap-1"><AlertTriangle size={11} /> Falhou — crédito estornado</span>
+            ) : p.disponivel ? (
+              <span className="badge-green flex items-center gap-1"><CheckCircle2 size={11} /> Concluído</span>
+            ) : p.status === 'processando' ? (
+              <span className="badge-blue flex items-center gap-1"><Loader2 size={11} className="animate-spin" /> Sua peça está sendo preparada…</span>
+            ) : (
+              <span className="badge-amber flex items-center gap-1"><Clock size={11} /> Disponível em {formatCountdown(restante)}</span>
+            )}
           </div>
-          <div className="rounded-xl border border-gray-100 bg-gray-50/50 p-5 max-h-[55vh] overflow-y-auto">
-            <pre className="whitespace-pre-wrap font-serif text-[13.5px] leading-relaxed text-gray-800">{p.conteudo || 'Conteúdo indisponível.'}</pre>
+
+          {/* Dados enviados */}
+          <div className="rounded-xl border border-gray-100 divide-y divide-gray-50">
+            {linhas.map(([rot, val], i) => (
+              <div key={i} className="flex gap-3 px-4 py-2.5 text-sm">
+                <span className="text-gray-500 w-40 flex-shrink-0">{rot}</span>
+                <span className="text-gray-800 flex-1 whitespace-pre-wrap break-words">{val}</span>
+              </div>
+            ))}
           </div>
-        </>
+
+          {/* Partes */}
+          {Array.isArray(p.partes) && p.partes.length > 0 && (
+            <div>
+              <p className="text-xs font-medium text-gray-500 mb-1.5">Partes</p>
+              <div className="space-y-1">
+                {p.partes.map((pa, i) => (
+                  <div key={i} className="text-sm text-gray-700">{pa.nome} <span className="text-gray-400">· {pa.tipo}{pa.representada ? ' · representada' : ''}</span></div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Relato */}
+          {p.descricao && (
+            <div>
+              <p className="text-xs font-medium text-gray-500 mb-1.5">Relato do caso</p>
+              <p className="text-sm text-gray-700 whitespace-pre-wrap">{p.descricao}</p>
+            </div>
+          )}
+          {p.duvidas && (
+            <div>
+              <p className="text-xs font-medium text-gray-500 mb-1.5">Dúvidas</p>
+              <p className="text-sm text-gray-700 whitespace-pre-wrap">{p.duvidas}</p>
+            </div>
+          )}
+
+          {/* Anexos */}
+          {Array.isArray(p.anexos) && p.anexos.length > 0 && (
+            <div>
+              <p className="text-xs font-medium text-gray-500 mb-1.5">Documentos enviados</p>
+              <div className="space-y-1.5">
+                {p.anexos.map((a, i) => (
+                  <div key={i} className="flex items-center gap-2 text-sm text-gray-700"><Paperclip size={13} className="text-gray-400" /> {a.nome}</div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Conteúdo + download (apenas quando liberado) */}
+          {p.disponivel && (
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-xs font-medium text-gray-500">Documento gerado</p>
+                <button onClick={baixar} className="btn-primary !py-1.5 !px-3 text-sm flex items-center gap-1.5"><Download size={14} /> Baixar PDF</button>
+              </div>
+              <div className="rounded-xl border border-gray-100 bg-gray-50/50 p-5 max-h-[40vh] overflow-y-auto">
+                <pre className="whitespace-pre-wrap font-serif text-[13.5px] leading-relaxed text-gray-800">{p.conteudo || 'Conteúdo indisponível.'}</pre>
+              </div>
+            </div>
+          )}
+          {!p.disponivel && p.status !== 'erro' && (
+            <p className="text-sm text-gray-400">O documento ficará disponível para download assim que for liberado.</p>
+          )}
+        </div>
       )}
     </Modal>
   )

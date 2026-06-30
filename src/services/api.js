@@ -147,6 +147,8 @@ export const financeiroService = {
 export const agendaService = {
   listar:   (params = {}) => api.get('/agenda?' + new URLSearchParams(params)),
   proximos: ()            => api.get('/agenda/proximos'),
+  atividades:(params = {})=> api.get('/agenda/atividades?' + new URLSearchParams(params)),
+  resumo:   ()            => api.get('/agenda/resumo'),
   criar:    (data)        => api.post('/agenda', data),
   atualizar:(id, data)    => api.patch(`/agenda/${id}`, data),
   remover:  (id)          => api.delete(`/agenda/${id}`),

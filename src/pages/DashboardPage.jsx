@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { TrendingUp, TrendingDown, AlertTriangle, Users, Briefcase, DollarSign, Clock, Sparkles, ArrowRight } from 'lucide-react'
+import { TrendingUp, TrendingDown, AlertTriangle, Users, Briefcase, DollarSign, Clock, Sparkles, ArrowRight, ListTodo, CheckCircle2 } from 'lucide-react'
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import { useAuth } from '../contexts/AuthContext.jsx'
 import { useApi } from '../hooks/useApi.js'
@@ -59,6 +59,7 @@ export default function DashboardPage() {
 
   const { data: kpis,    loading: l1, error: e1, refetch: r1 } = useApi(() => financeiroService.dashboard({ mes: now.getMonth() + 1, ano: now.getFullYear() }), [])
   const { data: proxEvt, loading: l2 }                          = useApi(() => agendaService.proximos(), [])
+  const { data: ativResumo }                                    = useApi(() => agendaService.resumo(), [])
   const { data: procData,loading: l3 }                          = useApi(() => processosService.listar({ limit: 5, prioridade: 'Alta' }), [])
 
   if (e1) return <ErrorBlock message={e1} onRetry={r1} />
@@ -114,6 +115,25 @@ export default function DashboardPage() {
           delta={kpis ? `${kpis.inadim_clientes} cliente(s)` : ''}
           icon={AlertTriangle} iconColor="bg-amber-50 text-amber-600" />
       </div>
+
+      {/* Atividades (Kanban) */}
+      <Link to="/kanban" className="block">
+        <div className="grid grid-cols-3 gap-4">
+          {[
+            { label: 'A concluir',        value: ativResumo?.a_concluir,     icon: ListTodo,      color: 'bg-brand-50 text-brand-700' },
+            { label: 'Atrasadas',         value: ativResumo?.atrasadas,      icon: AlertTriangle, color: 'bg-red-50 text-red-600' },
+            { label: 'Concluídas no mês', value: ativResumo?.concluidas_mes, icon: CheckCircle2,  color: 'bg-green-50 text-green-600' },
+          ].map((a) => (
+            <div key={a.label} className="card p-4 flex items-center gap-3 hover:border-brand-200 transition-colors">
+              <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${a.color}`}><a.icon size={18} /></div>
+              <div>
+                <p className="text-xl font-semibold text-gray-900">{a.value ?? '—'}</p>
+                <p className="text-xs text-gray-500">{a.label}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </Link>
 
       {/* Gráfico + eventos */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
