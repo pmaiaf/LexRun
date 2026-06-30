@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Trash2, Plus } from 'lucide-react'
+import { Trash2, Plus, Pencil, Check, X } from 'lucide-react'
 import { Modal, FormField, useToast } from './index.jsx'
 import { tagsService } from '../../services/api.js'
 
@@ -16,6 +16,22 @@ export default function TagsManagerModal({ open, onClose, tags, onChanged }) {
   const [novoIcone, setNovoIcone] = useState('')
   const [criando, setCriando] = useState(false)
   const [removendoId, setRemovendoId] = useState(null)
+  const [editId, setEditId] = useState(null)
+  const [editNome, setEditNome] = useState('')
+  const [editCor, setEditCor] = useState(CORES_SUGERIDAS[0])
+  const [editIcone, setEditIcone] = useState('')
+  const [salvandoEdit, setSalvandoEdit] = useState(false)
+
+  function abrirEdicao(t) { setEditId(t.id); setEditNome(t.nome); setEditCor(t.cor || CORES_SUGERIDAS[0]); setEditIcone(t.icone || '') }
+  async function salvarEdicao() {
+    if (!editNome.trim()) return
+    setSalvandoEdit(true)
+    try {
+      await tagsService.atualizar(editId, { nome: editNome.trim(), cor: editCor, icone: editIcone || null })
+      setEditId(null); onChanged?.()
+    } catch (err) { toast.error(err.message) }
+    finally { setSalvandoEdit(false) }
+  }
 
   async function handleCriar(e) {
     e.preventDefault()
@@ -49,14 +65,27 @@ export default function TagsManagerModal({ open, onClose, tags, onChanged }) {
             <p className="text-xs text-gray-400 py-3">Nenhuma etiqueta criada ainda.</p>
           ) : (
             <div className="space-y-1.5 max-h-48 overflow-y-auto">
-              {tags.map(t => (
-                <div key={t.id} className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-gray-50">
+              {tags.map(t => editId === t.id ? (
+                <div key={t.id} className="px-2.5 py-2 rounded-lg bg-gray-50 space-y-2">
+                  <div className="flex gap-2">
+                    <input className="input flex-shrink-0 w-12 text-center !py-1" maxLength={2} value={editIcone} onChange={e => setEditIcone(e.target.value)} placeholder="🏷️" />
+                    <input className="input flex-1 !py-1" value={editNome} onChange={e => setEditNome(e.target.value)} />
+                    <button onClick={salvarEdicao} disabled={salvandoEdit} className="text-green-600 hover:text-green-700 p-1"><Check size={15} /></button>
+                    <button onClick={() => setEditId(null)} className="text-gray-400 hover:text-gray-600 p-1"><X size={15} /></button>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    {CORES_SUGERIDAS.map(c => (
+                      <button key={c} type="button" onClick={() => setEditCor(c)}
+                        className={`w-5 h-5 rounded-full flex-shrink-0 ${editCor === c ? 'ring-2 ring-offset-1 ring-gray-400' : ''}`} style={{ backgroundColor: c }} />
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <div key={t.id} className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-gray-50 group">
                   <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: t.cor }} />
                   <span className="text-sm text-gray-700 flex-1">{t.icone ? `${t.icone} ` : ''}{t.nome}</span>
-                  <button onClick={() => handleRemover(t)} disabled={removendoId === t.id}
-                    className="text-gray-400 hover:text-red-500 p-1">
-                    <Trash2 size={13} />
-                  </button>
+                  <button onClick={() => abrirEdicao(t)} className="text-gray-400 hover:text-brand-600 p-1"><Pencil size={12} /></button>
+                  <button onClick={() => handleRemover(t)} disabled={removendoId === t.id} className="text-gray-400 hover:text-red-500 p-1"><Trash2 size={13} /></button>
                 </div>
               ))}
             </div>

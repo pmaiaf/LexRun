@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Plus, Search, X, User, Phone, Mail, FileText, ExternalLink, Lock, Unlock, Trash2, Edit2, ChevronRight, Briefcase, Tag as TagIcon, Calendar, Clock, MapPin } from 'lucide-react'
+import { Plus, Search, X, User, Phone, Mail, FileText, ExternalLink, Lock, Unlock, Trash2, Edit2, ChevronRight, Briefcase, Tag as TagIcon, Calendar, Clock, MapPin, Star } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useApi, useAction } from '../hooks/useApi.js'
 import { clientesService, processosService, tagsService, agendaService } from '../services/api.js'
@@ -224,6 +224,11 @@ export default function ClientesPage() {
 
   const params = busca ? { busca, limit: 100 } : { limit: 100 }
   const { data, loading, error, refetch } = useApi(() => clientesService.listar(params), [busca])
+  async function toggleImportanteCliente(c, e) {
+    e.stopPropagation()
+    try { await clientesService.atualizar(c.id, { importante: !c.importante }); refetch() }
+    catch (err) { toast.error(err.message) }
+  }
   const { data: procData, refetch: refetchProcessos } = useApi(
     () => selecionado ? clientesService.processos(selecionado.id) : Promise.resolve([]),
     [selecionado?.id]
@@ -388,6 +393,9 @@ export default function ClientesPage() {
                 className={`flex items-center gap-3 px-4 py-3 cursor-pointer border-b border-gray-50 transition-colors
                   ${selecionado?.id === c.id ? 'bg-brand-50' : 'hover:bg-gray-50'}`}
               >
+                <button onClick={(e) => toggleImportanteCliente(c, e)} className="p-0.5 flex-shrink-0" title={c.importante ? 'Remover destaque' : 'Marcar como importante'}>
+                  <Star size={14} className={c.importante ? 'fill-amber-400 text-amber-400' : 'text-gray-300 hover:text-amber-400'} />
+                </button>
                 <div className={`w-9 h-9 rounded-full flex items-center justify-center text-xs font-medium flex-shrink-0 ${avatarColor(c.id)}`}>
                   {avatarInitials(c.nome)}
                 </div>

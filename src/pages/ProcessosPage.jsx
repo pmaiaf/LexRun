@@ -1,9 +1,10 @@
 import { useState } from 'react'
-import { Plus, Search, X, ExternalLink, MoreVertical, Edit2, Trash2, AlignJustify, List } from 'lucide-react'
+import { Plus, Search, X, ExternalLink, MoreVertical, Edit2, Trash2, AlignJustify, List, Star, Tag } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useApi, useAction } from '../hooks/useApi.js'
 import { processosService, tagsService } from '../services/api.js'
 import { LoadingScreen, ErrorBlock, Modal, FormField, useToast, ConfirmDialog, EmptyState, TagBadges, TagPicker } from '../components/ui/index.jsx'
+import TagsManagerModal from '../components/ui/TagsManagerModal.jsx'
 import { formatCurrency, formatDate, prazoLabel, prioridadeClass } from '../utils/helpers.js'
 import { maskProcessoCnj } from '../utils/masks.js'
 import { DicaDaTela } from '../components/Onboarding.jsx'
@@ -16,7 +17,8 @@ const statusClass = s => ({ 'Novo':'bg-gray-100 text-gray-600','Em Andamento':'b
 export default function ProcessosPage() {
   const toast = useToast()
   const navigate = useNavigate()
-  const [filtros, setFiltros] = useState({ busca: '', status: '', area: '' })
+  const [filtros, setFiltros] = useState({ busca: '', status: '', area: '', tag_id: '' })
+  const [tagsModalOpen, setTagsModalOpen] = useState(false)
   const [selected, setSelected] = useState(null)
   const [modalOpen, setModalOpen] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(null)
@@ -27,11 +29,17 @@ export default function ProcessosPage() {
   const [saving, setSaving] = useState(false)
   const { execute: execDelete, loading: deleting } = useAction()
 
-  const { data: todasTags } = useApi(() => tagsService.listar(), [])
+  const { data: todasTags, refetch: refetchTags } = useApi(() => tagsService.listar(), [])
 
-  const params = Object.fromEntries(Object.entries({ status: filtros.status, area: filtros.area, busca: filtros.busca, limit: 100 }).filter(([,v]) => v))
-  const { data, loading, error, refetch } = useApi(() => processosService.listar(params), [filtros.status, filtros.area, filtros.busca])
+  const params = Object.fromEntries(Object.entries({ status: filtros.status, area: filtros.area, busca: filtros.busca, tag_id: filtros.tag_id, limit: 100 }).filter(([,v]) => v))
+  const { data, loading, error, refetch } = useApi(() => processosService.listar(params), [filtros.status, filtros.area, filtros.busca, filtros.tag_id])
   const processos = data?.data || []
+
+  async function toggleImportante(p, e) {
+    e.stopPropagation()
+    try { await processosService.atualizar(p.id, { importante: !p.importante }); refetch() }
+    catch (err) { toast.error(err.message) }
+  }
 
   async function handleCriar(e) {
     e.preventDefault(); setSaving(true)
@@ -96,6 +104,11 @@ export default function ProcessosPage() {
           <option value="">Todos os status</option>
           {STATUS.filter(Boolean).map(s => <option key={s}>{s}</option>)}
         </select>
+        <select className="input w-auto text-sm" value={filtros.tag_id} onChange={e => setFiltros(f => ({...f, tag_id: e.target.value}))}>
+          <option value="">Todas as etiquetas</option>
+          {(todasTags || []).map(t => <option key={t.id} value={t.id}>{t.nome}</option>)}
+        </select>
+        <button onClick={() => setTagsModalOpen(true)} className="btn-secondary text-sm flex items-center gap-1.5"><Tag size={14} /> Etiquetas</button>
       </div>
 
       <div className="card overflow-hidden">
@@ -122,6 +135,9 @@ export default function ProcessosPage() {
                       className="hover:bg-gray-50 transition-colors cursor-pointer group">
                       <td className={`px-4 ${padY} text-left`}>
                         <div className="flex items-center gap-2">
+                          <button onClick={(e) => toggleImportante(p, e)} className="p-0.5 flex-shrink-0" title={p.importante ? 'Remover destaque' : 'Marcar como importante'}>
+                            <Star size={15} className={p.importante ? 'fill-amber-400 text-amber-400' : 'text-gray-300 hover:text-amber-400'} />
+                          </button>
                           <div>
                             <p className="font-medium text-gray-800 group-hover:text-brand-700 transition-colors">{p.titulo}</p>
                             {p.numero && <p className="text-[11px] text-gray-400 mt-0.5 font-mono">{p.numero}</p>}
@@ -167,6 +183,8 @@ export default function ProcessosPage() {
           </div>
         )}
       </div>
+
+      {tagsModalOpen && <TagsManagerModal open={tagsModalOpen} onClose={() => setTagsModalOpen(false)} tags={todasTags || []} onChanged={refetchTags} />}
 
       {/* Painel de detalhe */}
       {selected && (
