@@ -1,7 +1,6 @@
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
-import lexrunLogo from '../../assets/lexrun-logo-nova.png'
-
+import lexrunLogo from '../../assets/lexrun-logo.png'
 /**
  * Layout compartilhado pelas páginas jurídicas (Termos, Privacidade, Reembolso).
  * Header e footer alinhados com a landing page (logo nova, footer estruturado).
@@ -34,7 +33,7 @@ export default function LegalLayout({ titulo, atualizadoEm, children }) {
         <div className="max-w-6xl mx-auto px-6 py-14">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-12">
             <div className="col-span-2 md:col-span-1">
-              <img src={lexrunLogo} alt="LexRun" className="h-16 w-auto -ml-1 mb-2" />
+              <img src={lexrunLogo} alt="LexRun" className="h-24 w-auto object-contain scale-110" />
               <p className="text-xs text-brand-900/50 leading-relaxed max-w-[200px]">
                 Gestão jurídica completa para escritórios de advocacia, do início ao encerramento do processo.
               </p>

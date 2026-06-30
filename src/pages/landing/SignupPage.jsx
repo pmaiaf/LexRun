@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Scale, ArrowRight, ArrowLeft, Check, Loader2 } from 'lucide-react'
-import lexrunLogo from '../../assets/lexrun-logo-nova.png'
+import lexrunLogo from '../../assets/lexrun-logo.png'
 import { useApi } from '../../hooks/useApi.js'
 import { assinaturaService, cadastroService } from '../../services/api.js'
 

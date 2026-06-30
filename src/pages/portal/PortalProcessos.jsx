@@ -1,9 +1,9 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
-import { ArrowLeft, CheckCircle, Clock, Circle, ChevronRight } from 'lucide-react'
+import { ArrowLeft, CheckCircle, Clock, Circle, ChevronRight, Upload, Loader2 } from 'lucide-react'
 import { useApi } from '../../hooks/useApi.js'
 import { portalService } from '../../services/api.js'
-import { LoadingScreen, ErrorBlock, EmptyState } from '../../components/ui/index.jsx'
+import { LoadingScreen, ErrorBlock, EmptyState, useToast } from '../../components/ui/index.jsx'
 import { formatDate, prazoLabel } from '../../utils/helpers.js'
 import { FileText } from 'lucide-react'
 
@@ -75,7 +75,14 @@ export function PortalProcessoDetalhe() {
 
   const { data: processo, loading: l1, error: e1, refetch: r1 } = useApi(() => portalService.processo(id), [id])
   const { data: timeline, loading: l2 } = useApi(() => portalService.timeline(id), [id])
-  const { data: docs }                  = useApi(() => portalService.documentos(id), [id])
+  const { data: docs, refetch: refetchDocs } = useApi(() => portalService.documentos(id), [id])
+  const toast = useToast()
+  const fileRef = useRef(null)
+  const [enviando, setEnviando] = useState(false)
+  async function enviarDoc(e) {
+    const file = e.target.files?.[0]; if (file) { if (fileRef.current) fileRef.current.value=''; setEnviando(true)
+      try { const fd = new FormData(); fd.append('arquivo', file); fd.append('processo_id', id); await portalService.enviarDocumento(fd); toast.success('Documento enviado! Seu advogado vai analisar.'); refetchDocs() }
+      catch (err) { toast.error(err.message) } finally { setEnviando(false) } } }
 
   const [tab, setTab] = useState('timeline')
 
@@ -172,23 +179,38 @@ export function PortalProcessoDetalhe() {
       {/* Documentos */}
       {tab === 'documentos' && (
         <div className="card overflow-hidden">
+          <div className="flex items-center justify-between px-5 py-3.5 border-b border-gray-50">
+            <p className="text-sm font-medium text-gray-800">Documentos do processo</p>
+            <input ref={fileRef} type="file" className="hidden" accept="application/pdf,image/*" onChange={enviarDoc} />
+            <button onClick={() => fileRef.current?.click()} disabled={enviando}
+              className="text-xs px-3 py-1.5 rounded-lg bg-brand-700 text-white hover:bg-brand-800 flex items-center gap-1.5 font-medium disabled:opacity-60">
+              {enviando ? <Loader2 size={13} className="animate-spin" /> : <Upload size={13} />} Enviar documento
+            </button>
+          </div>
           {docs_.length === 0
             ? <div className="text-center py-10 text-sm text-gray-400">
-                Nenhum documento disponível ainda.
+                Nenhum documento ainda. Envie um documento para o seu advogado.
               </div>
-            : docs_.map(doc => (
-              <a key={doc.id} href={portalService.downloadDoc(doc.id)} target="_blank" rel="noreferrer"
-                className="flex items-center gap-3 px-5 py-4 border-b border-gray-50 hover:bg-gray-50 transition-colors">
-                <div className="w-9 h-9 bg-brand-50 rounded-lg flex items-center justify-center flex-shrink-0">
-                  <FileText size={16} className="text-brand-700" />
+            : docs_.map(doc => {
+              const pendente = doc.status_aprovacao === 'pendente'
+              const Wrapper = pendente ? 'div' : 'a'
+              const props = pendente ? {} : { href: portalService.downloadDoc(doc.id), target: '_blank', rel: 'noreferrer' }
+              return (
+              <Wrapper key={doc.id} {...props}
+                className={`flex items-center gap-3 px-5 py-4 border-b border-gray-50 ${pendente ? '' : 'hover:bg-gray-50 cursor-pointer'} transition-colors`}>
+                <div className={`w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 ${pendente ? 'bg-amber-50' : 'bg-brand-50'}`}>
+                  <FileText size={16} className={pendente ? 'text-amber-600' : 'text-brand-700'} />
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-gray-800 truncate">{doc.nome}</p>
                   <p className="text-xs text-gray-400 mt-0.5">{formatDate(doc.criado_em)}</p>
                 </div>
-                <span className="text-xs text-brand-600">Baixar →</span>
-              </a>
-            ))
+                {pendente
+                  ? <span className="text-xs text-amber-600 bg-amber-50 rounded-full px-2 py-0.5">Aguardando aprovação</span>
+                  : <span className="text-xs text-brand-600">Baixar →</span>}
+              </Wrapper>
+              )
+            })
           }
         </div>
       )}

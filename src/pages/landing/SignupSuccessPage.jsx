@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { CheckCircle2, Mail, Loader2, Scale } from 'lucide-react'
-import lexrunLogo from '../../assets/lexrun-logo-nova.png'
+import lexrunLogo from '../../assets/lexrun-logo.png'
 import { cadastroService } from '../../services/api.js'
 
 const TENTATIVAS_MAX = 20 // ~40s de polling, tempo de sobra para o webhook chegar

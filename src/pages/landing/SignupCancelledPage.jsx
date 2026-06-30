@@ -1,14 +1,13 @@
 import { useNavigate } from 'react-router-dom'
 import { Scale, ArrowLeft } from 'lucide-react'
-import lexrunLogo from '../../assets/lexrun-logo-nova.png'
-
+import lexrunLogo from '../../assets/lexrun-logo.png'
 export default function SignupCancelledPage() {
   const navigate = useNavigate()
 
   return (
     <div className="min-h-screen bg-paper flex flex-col items-center justify-center px-6">
       <div className="flex items-center gap-2 mb-10">
-        <img src={lexrunLogo} alt="LexRun" className="h-14 w-auto" />
+        <img src={lexrunLogo} alt="LexRun" className="h-24 w-auto object-contain scale-110" />
       </div>
 
       <div className="w-full max-w-md bg-white border border-brand-900/[0.07] rounded-2xl p-8 text-center">

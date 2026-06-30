@@ -161,6 +161,9 @@ export const documentosService = {
   // onde não há como anexar o header Authorization.
   download: (id)          => `${BASE_URL}/documentos/${id}/download?token=${getAccessToken()}`,
   remover:  (id)          => api.delete(`/documentos/${id}`),
+  pendentes:()            => api.get('/documentos/pendentes'),
+  aprovar:  (id)          => api.post(`/documentos/${id}/aprovar`, {}),
+  recusar:  (id, motivo)  => api.post(`/documentos/${id}/recusar`, { motivo }),
 }
 
 export const escritorioService = {
@@ -200,6 +203,18 @@ async function portalRequest(path, options = {}) {
   return data
 }
 
+async function portalUpload(path, formData) {
+  const token = getPortalToken()
+  const res = await fetch(`${BASE_URL}${path}`, {
+    method: 'POST',
+    headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+    body: formData,
+  })
+  const data = await res.json().catch(() => ({}))
+  if (!res.ok) throw new ApiError(data.erro || 'Erro ao enviar.', res.status)
+  return data
+}
+
 export const portalService = {
   login:      (email, senha, escritorioSlug) =>
     portalRequest('/portal/login', { method: 'POST', body: { email, senha, escritorioSlug } }),
@@ -208,6 +223,7 @@ export const portalService = {
   processo:   (id) => portalRequest(`/portal/processos/${id}`),
   timeline:   (id) => portalRequest(`/portal/processos/${id}/timeline`),
   documentos: (processoId) => portalRequest(`/portal/documentos?processo_id=${processoId}`),
+  enviarDocumento: (formData) => portalUpload('/portal/documentos', formData),
   cobrancas:  () => portalRequest('/portal/cobrancas'),
   agenda:     () => portalRequest('/portal/agenda'),
   esqueciSenha:   (email)             => api.post('/portal/esqueci-senha', { email }),

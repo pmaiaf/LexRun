@@ -3,11 +3,11 @@ import { useParams, useNavigate } from 'react-router-dom'
 import {
   ArrowLeft, Clock, Plus, CheckCircle, Circle, Edit2,
   Upload, FileText, ExternalLink, Trash2, Calendar,
-  User, Tag, DollarSign, Play, Square, RotateCcw, Zap, Sparkles, RefreshCw
+  User, Tag, DollarSign, Play, Square, RotateCcw, Zap, Sparkles, RefreshCw, Check, X, Inbox
 } from 'lucide-react'
 import { useApi, useAction, useCronometro } from '../hooks/useApi.js'
-import { processosService, documentosService, agendaService, automacoesService } from '../services/api.js'
-import { LoadingScreen, ErrorBlock, Modal, FormField, useToast, ConfirmDialog } from '../components/ui/index.jsx'
+import { processosService, documentosService, agendaService, automacoesService, tagsService } from '../services/api.js'
+import { LoadingScreen, ErrorBlock, Modal, FormField, useToast, ConfirmDialog, TagBadges, TagPicker } from '../components/ui/index.jsx'
 import GeradorIA from '../components/GeradorIA.jsx'
 import { formatCurrency, formatDate, prazoLabel, prioridadeClass } from '../utils/helpers.js'
 
@@ -334,6 +334,7 @@ export default function ProcessoDetalhePage() {
   const { data: processo, loading, error, refetch: refetchProc } = useApi(() => processosService.buscar(id), [id])
   const { data: timeline, refetch: refetchTl }                   = useApi(() => processosService.timeline(id), [id])
   const { data: docs,     refetch: refetchDocs }                 = useApi(() => documentosService.listar({ processo_id: id }), [id])
+  const { data: todasTags }                                      = useApi(() => tagsService.listar(), [])
   const { data: eventos }                                        = useApi(() => agendaService.listar({ limit: 50 }), [])
   const { data: movimentacoes, refetch: refetchMov }             = useApi(() => processosService.movimentacoes(id), [id])
   const { execute: execSincronizar, loading: sincronizando }     = useAction()
@@ -345,6 +346,9 @@ export default function ProcessoDetalhePage() {
   const [modalHorasManual, setModalHorasManual] = useState(false)
   const [modalTemplates, setModalTemplates] = useState(false)
   const [modalIA, setModalIA] = useState(false)
+  const [recusarDoc, setRecusarDoc] = useState(null)
+  const [motivoRecusa, setMotivoRecusa] = useState('')
+  const [processandoDoc, setProcessandoDoc] = useState(null)
   const [modalFaturar,   setModalFaturar]   = useState(false)
   const [faturando,      setFaturando]      = useState(false)
   const [valorHoraFaturar, setValorHoraFaturar] = useState('300')
@@ -465,6 +469,32 @@ export default function ProcessoDetalhePage() {
     })
   }
 
+  async function toggleTag(tag) {
+    const atuais = processo?.tags || []
+    const tem = atuais.some(t => t.id === tag.id)
+    try {
+      if (tem) await tagsService.removerDeProcesso(id, tag.id)
+      else     await tagsService.atribuirProcesso(id, tag.id)
+      refetchProc()
+    } catch (e) { toast.error(e.message) }
+  }
+  async function aprovarDoc(doc) {
+    setProcessandoDoc(doc.id)
+    try { await documentosService.aprovar(doc.id); toast.success('Documento aprovado.'); refetchDocs() }
+    catch (e) { toast.error(e.message) }
+    finally { setProcessandoDoc(null) }
+  }
+  async function confirmarRecusa() {
+    if (!recusarDoc) return
+    setProcessandoDoc(recusarDoc.id)
+    try {
+      await documentosService.recusar(recusarDoc.id, motivoRecusa.trim())
+      toast.success('Documento recusado e cliente avisado.')
+      setRecusarDoc(null); setMotivoRecusa(''); refetchDocs()
+    } catch (e) { toast.error(e.message) }
+    finally { setProcessandoDoc(null) }
+  }
+
   async function handleFaturarHoras(e) {
     e.preventDefault()
     setFaturando(true)
@@ -505,6 +535,10 @@ export default function ProcessoDetalhePage() {
             </div>
             <h1 className="text-xl font-semibold text-gray-900">{processo.titulo}</h1>
             {processo.numero && <p className="text-sm font-mono text-gray-400 mt-0.5">{processo.numero}</p>}
+            <div className="flex items-center gap-1.5 mt-2 flex-wrap">
+              <TagBadges tags={processo.tags || []} size="sm" />
+              <TagPicker todasTags={todasTags || []} tagsAtuais={processo.tags || []} onToggle={toggleTag} />
+            </div>
           </div>
           <div className="flex gap-2 flex-shrink-0">
             <button onClick={() => setModalTemplates(true)}
@@ -740,8 +774,36 @@ export default function ProcessoDetalhePage() {
       )}
 
       {/* ── DOCUMENTOS ──────────────────────────────────────────────────────── */}
-      {tab === 'documentos' && (
-        <div className="card overflow-hidden">
+      {tab === 'documentos' && (() => {
+        const pendentesCliente = (docs || []).filter(d => d.origem === 'cliente' && d.status_aprovacao === 'pendente')
+        const docsAtivos = (docs || []).filter(d => !(d.origem === 'cliente' && d.status_aprovacao === 'pendente'))
+        return (
+        <div className="space-y-4">
+          {pendentesCliente.length > 0 && (
+            <div className="card overflow-hidden border-amber-200">
+              <div className="flex items-center gap-2 px-5 py-3.5 border-b border-amber-100 bg-amber-50/60">
+                <Inbox size={15} className="text-amber-600" />
+                <p className="text-sm font-medium text-amber-800">Enviados pelo cliente — aguardando sua aprovação ({pendentesCliente.length})</p>
+              </div>
+              <div className="divide-y divide-gray-50">
+                {pendentesCliente.map(doc => (
+                  <div key={doc.id} className="flex items-center gap-3 px-5 py-3.5">
+                    <div className="w-9 h-9 bg-amber-50 rounded-lg flex items-center justify-center flex-shrink-0"><FileText size={16} className="text-amber-600"/></div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-gray-800 truncate">{doc.nome}</p>
+                      <p className="text-xs text-gray-400 mt-0.5">Enviado pelo cliente · {formatDate(doc.criado_em)}{doc.tamanho_bytes ? ` · ${(doc.tamanho_bytes/1024).toFixed(0)} KB` : ''}</p>
+                    </div>
+                    <a href={documentosService.download(doc.id)} target="_blank" rel="noreferrer" className="btn-ghost text-xs p-1.5" title="Visualizar"><ExternalLink size={13}/></a>
+                    <button onClick={() => aprovarDoc(doc)} disabled={processandoDoc === doc.id}
+                      className="text-xs px-2.5 py-1.5 rounded-lg bg-green-50 text-green-700 hover:bg-green-100 flex items-center gap-1 font-medium"><Check size={13}/> Aprovar</button>
+                    <button onClick={() => { setRecusarDoc(doc); setMotivoRecusa('') }} disabled={processandoDoc === doc.id}
+                      className="text-xs px-2.5 py-1.5 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 flex items-center gap-1 font-medium"><X size={13}/> Recusar</button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+          <div className="card overflow-hidden">
           <div className="flex items-center justify-between px-5 py-4 border-b border-gray-50">
             <p className="text-sm font-medium text-gray-800">Documentos do processo</p>
             <div className="flex gap-2">
@@ -753,11 +815,11 @@ export default function ProcessoDetalhePage() {
               </button>
             </div>
           </div>
-          {!docs || docs.length === 0
+          {docsAtivos.length === 0
             ? <div className="text-center py-10 text-sm text-gray-400">Nenhum documento enviado ainda.</div>
             : (
               <div className="divide-y divide-gray-50">
-                {docs.map(doc => (
+                {docsAtivos.map(doc => (
                   <div key={doc.id} className="flex items-center gap-3 px-5 py-3.5 hover:bg-gray-50">
                     <div className="w-9 h-9 bg-brand-50 rounded-lg flex items-center justify-center flex-shrink-0">
                       <FileText size={16} className="text-brand-700"/>
@@ -780,8 +842,10 @@ export default function ProcessoDetalhePage() {
               </div>
             )
           }
+          </div>
         </div>
-      )}
+        )
+      })()}
 
       {/* ── AGENDA ──────────────────────────────────────────────────────────── */}
       {tab === 'agenda' && (
@@ -986,6 +1050,18 @@ export default function ProcessoDetalhePage() {
       {/* Gerador de documentos via IA — peça simples, petição, procuração */}
       <Modal open={modalIA} onClose={() => setModalIA(false)} title="Gerar documento com IA" size="lg">
         <GeradorIA processo={processo}/>
+      </Modal>
+
+      <Modal open={!!recusarDoc} onClose={() => setRecusarDoc(null)} title="Recusar documento" size="sm">
+        <p className="text-sm text-gray-600 mb-3">O documento <span className="font-medium">"{recusarDoc?.nome}"</span> será excluído e o cliente avisado por e-mail. Diga o que faltou para que ele reenvie corrigido.</p>
+        <FormField label="O que está faltando / motivo">
+          <textarea className="input min-h-[90px]" value={motivoRecusa} onChange={e => setMotivoRecusa(e.target.value)}
+            placeholder="Ex.: documento ilegível, faltou a última página, frente e verso, etc." />
+        </FormField>
+        <div className="flex justify-end gap-2 mt-4">
+          <button onClick={() => setRecusarDoc(null)} className="btn-ghost">Cancelar</button>
+          <button onClick={confirmarRecusa} disabled={processandoDoc === recusarDoc?.id} className="btn-primary !bg-red-600 hover:!bg-red-700 flex items-center gap-1.5"><X size={14}/> Recusar e avisar</button>
+        </div>
       </Modal>
 
       <ConfirmDialog open={!!confirmDelDoc} onClose={() => setConfirmDelDoc(null)} onConfirm={handleDeleteDoc}

@@ -4,7 +4,7 @@ import { useAuth } from '../contexts/AuthContext.jsx'
 import { Eye, EyeOff } from 'lucide-react'
 import { Spinner } from '../components/ui/index.jsx'
 import { MockupKanbanPro } from './landing/LandingMockupsPro.jsx'
-import lexrunLogo from '../assets/lexrun-logo-nova.png'
+import lexrunLogo from '../assets/lexrun-logo.png'
 
 export default function LoginPage() {
   const { login } = useAuth()
@@ -35,7 +35,7 @@ export default function LoginPage() {
         {/* Logo no topo */}
         <div className="flex items-center gap-3 z-10">
           <div className="bg-paper rounded-xl px-3 py-2 inline-flex items-center">
-            <img src={lexrunLogo} alt="LexRun" className="h-11 w-auto" />
+            <img src={lexrunLogo} alt="LexRun"className="h-24 w-auto object-contain scale-110" />
           </div>
         </div>
 

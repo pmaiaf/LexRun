@@ -9,8 +9,7 @@ import { useApi } from '../../hooks/useApi.js'
 import { assinaturaService } from '../../services/api.js'
 import { FEATURES_POR_PLANO, PUBLICO_POR_PLANO } from '../../data/planos.js'
 import { MockupKanbanPro, MockupPortal, MockupRelatorios } from './LandingMockupsPro.jsx'
-import lexrunLogo from '../../assets/lexrun-logo-nova.png'
-
+import lexrunLogo from '../../assets/lexrun-logo.png'
 // ── Autuação ao vivo (assinatura visual do hero) ─────────────────────────────
 // Em vez de uma imagem estática, simula um número de processo sendo
 // autuado em tempo real — referência direta ao vernáculo jurídico
@@ -97,7 +96,7 @@ export default function LandingPage() {
       <header className="sticky top-0 z-40 bg-paper/90 backdrop-blur-sm border-b border-brand-900/[0.06]">
         <div className="max-w-6xl mx-auto px-6 h-20 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <img src={lexrunLogo} alt="LexRun" className="h-14 w-auto" />
+            <img src={lexrunLogo} alt="LexRun" className="h-24 w-auto object-contain scale-110" />
           </div>
           <nav className="hidden md:flex items-center gap-8 text-sm text-brand-900/70">
             <a href="#recursos" className="hover:text-brand-900 transition-colors">Recursos</a>
@@ -360,7 +359,7 @@ export default function LandingPage() {
         <div className="max-w-6xl mx-auto px-6 py-14">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-12">
             <div className="col-span-2 md:col-span-1">
-              <img src={lexrunLogo} alt="LexRun" className="h-16 w-auto -ml-1 mb-2" />
+              <img src={lexrunLogo} alt="LexRun" className="h-24 w-auto object-contain scale-110"  />
               <p className="text-xs text-brand-900/50 leading-relaxed max-w-[200px]">
                 Gestão jurídica completa para escritórios de advocacia, do início ao encerramento do processo.
               </p>
