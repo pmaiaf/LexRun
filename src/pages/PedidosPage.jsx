@@ -21,7 +21,7 @@ const TIPOS = [
 ]
 const TIPO_LABEL = Object.fromEntries(TIPOS.map(t => [t.value, t.label]))
 
-const AREAS = ['Trabalhista', 'Previdenciário', 'Criminal', 'Asdministrativo', 'Cível', 'Tributário', 'Ambiental', 'Eleitoral']
+const AREAS = ['Trabalhista', 'Previdenciário', 'Criminal', 'Administrativo', 'Cível', 'Tributário', 'Ambiental', 'Eleitoral']
 const UFS = ['AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA', 'MT', 'MS', 'MG', 'PA', 'PB', 'PR', 'PE', 'PI', 'RJ', 'RN', 'RS', 'RO', 'RR', 'SC', 'SP', 'SE', 'TO']
 
 const SUBAREAS = {
