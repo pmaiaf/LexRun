@@ -44,11 +44,11 @@ function AutuacaoAoVivo() {
   }, [])
 
   return (
-    <div className="inline-flex items-center gap-2.5 bg-white/[0.06] border border-gold-400/30 rounded-full px-4 py-2">
+    <div className="inline-flex items-center gap-2.5 bg-white/[0.06] border border-gold-500/30 rounded-full px-4 py-2">
       <span className="w-1.5 h-1.5 rounded-full bg-accent-400 animate-pulse flex-shrink-0" />
       <span className="text-[10.5px] text-white/50 uppercase tracking-[0.12em] font-semibold">Autuado agora</span>
       <span className="font-mono text-xs text-white tabular-nums">
-        {texto}<span className="text-gold-400 animate-pulse">{texto.length < alvo.length ? '|' : ''}</span>
+        {texto}<span className="text-gold-500 animate-pulse">{texto.length < alvo.length ? '|' : ''}</span>
       </span>
     </div>
   )
@@ -120,7 +120,7 @@ export default function LandingPage() {
             <button onClick={() => navigate('/login')} className="text-sm text-brand-900/65 hover:text-brand-900 transition-colors hidden sm:block">Entrar</button>
             <button onClick={() => navigate('/comecar')}
               className="bg-brand-900 text-white text-sm px-4 py-2 rounded-lg hover:bg-brand-700 transition-colors flex items-center gap-1.5">
-              Começar agora <ArrowRight size={13} className="text-gold-400" />
+              Começar agora <ArrowRight size={13} className="text-gold-500" />
             </button>
           </div>
         </div>
@@ -138,7 +138,7 @@ export default function LandingPage() {
           <div>
             <AutuacaoAoVivo />
             <h1 className="font-display font-semibold text-[38px] sm:text-[56px] leading-[1.06] mt-7 tracking-tight">
-              A gestão do seu escritório, <span className="italic text-gold-300">conduzida</span> com a disciplina de um processo bem instruído.
+              A gestão do seu escritório, <span className="italic text-gold-500">conduzida</span> com a disciplina de um processo bem instruído.
             </h1>
             <p className="text-lg text-white/65 mt-6 max-w-xl leading-relaxed">
               Kanban jurídico, financeiro, portal do cliente e geração de documentos por IA — tudo isolado por escritório, num só sistema.
@@ -180,7 +180,7 @@ export default function LandingPage() {
           <div className="absolute -top-20 -right-10 w-80 h-80 rounded-full pointer-events-none"
             style={{ background: 'radial-gradient(circle, rgba(212,175,55,.2) 0%, rgba(212,175,55,0) 70%)' }} />
           <div className="relative max-w-2xl">
-            <span className="inline-block text-gold-300 text-xs font-semibold tracking-[0.14em] uppercase mb-3">Novo</span>
+            <span className="inline-block text-gold-500 text-xs font-semibold tracking-[0.14em] uppercase mb-3">Novo</span>
             <h2 className="font-display font-semibold text-2xl md:text-3xl text-white mb-3 leading-tight">
               Precisa de uma peça? A gente redige para você.
             </h2>
@@ -207,7 +207,7 @@ export default function LandingPage() {
           {COMO_FUNCIONA.map((passo, i) => (
             <div key={passo.titulo}>
               <div className="flex items-center gap-3 mb-3.5">
-                <div className="w-9 h-9 rounded-full bg-brand-900 text-gold-400 flex items-center justify-center flex-shrink-0">
+                <div className="w-9 h-9 rounded-full bg-brand-900 text-gold-500 flex items-center justify-center flex-shrink-0">
                   <passo.icon size={15} />
                 </div>
                 <span className="font-mono text-xs text-brand-900/35">{`0${i + 1}`}</span>
@@ -228,7 +228,7 @@ export default function LandingPage() {
             <div key={f.titulo} className={`flex flex-col ${invertido ? 'md:flex-row-reverse' : 'md:flex-row'} items-center gap-10 md:gap-16`}>
               <div className="flex-1">
                 <div className="w-11 h-11 rounded-xl bg-brand-900 flex items-center justify-center mb-5">
-                  <f.icon size={19} className="text-gold-400" />
+                  <f.icon size={19} className="text-gold-500" />
                 </div>
                 <h3 className="font-display font-semibold text-2xl md:text-3xl mb-3">{f.titulo}</h3>
                 <p className="text-brand-900/60 leading-relaxed max-w-md">{f.texto}</p>
@@ -273,7 +273,7 @@ export default function LandingPage() {
             <div className="grid grid-cols-3 text-xs md:text-sm font-semibold">
               <div className="px-4 md:px-6 py-4 text-white/50">Desafio</div>
               <div className="px-4 md:px-6 py-4 text-white/50 border-l border-white/10">Sem o LexRun</div>
-              <div className="px-4 md:px-6 py-4 text-gold-300 border-l border-white/10 bg-white/[0.03]">Com o LexRun</div>
+              <div className="px-4 md:px-6 py-4 text-gold-500 border-l border-white/10 bg-white/[0.03]">Com o LexRun</div>
             </div>
             {SEM_VS_COM.map((linha, i) => (
               <div key={i} className="grid grid-cols-3 text-xs md:text-sm border-t border-white/[0.07]">
@@ -307,7 +307,7 @@ export default function LandingPage() {
                 className={`rounded-2xl p-7 relative ${destaque ? 'text-white shadow-[0_30px_60px_-24px_rgba(10,28,58,0.55)]' : 'bg-white border border-brand-900/[0.07]'}`}
                 style={destaque ? { background: 'linear-gradient(160deg,#0d2241,#0a1c3a)', border: '1px solid rgba(212,175,55,.4)' } : undefined}>
                 {destaque && (
-                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gold-400 text-brand-900 text-[10px] font-semibold px-3 py-1 rounded-full whitespace-nowrap">
+                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gold-500 text-brand-900 text-[10px] font-semibold px-3 py-1 rounded-full whitespace-nowrap">
                     Mais escolhido
                   </span>
                 )}
@@ -328,12 +328,12 @@ export default function LandingPage() {
                           : (destaque ? 'text-white/30' : 'text-brand-900/25')
                       }`}>
                       {f.emBreve
-                        ? <Clock size={12} className={`flex-shrink-0 ${destaque ? 'text-gold-300' : 'text-amber-400'}`} />
+                        ? <Clock size={12} className={`flex-shrink-0 ${destaque ? 'text-gold-500' : 'text-amber-400'}`} />
                         : f.ok
-                        ? <Check size={12} className={`flex-shrink-0 ${destaque ? 'text-gold-400' : 'text-accent-600'}`} />
+                        ? <Check size={12} className={`flex-shrink-0 ${destaque ? 'text-gold-500' : 'text-accent-600'}`} />
                         : <X size={12} className={`flex-shrink-0 ${destaque ? 'text-white/25' : 'text-brand-900/15'}`} />
                       }
-                      <span>{f.label}{f.emBreve && <span className={`ml-1 ${destaque ? 'text-gold-300' : 'text-amber-500'}`}>(em breve)</span>}</span>
+                      <span>{f.label}{f.emBreve && <span className={`ml-1 ${destaque ? 'text-gold-500' : 'text-amber-500'}`}>(em breve)</span>}</span>
                     </li>
                   ))}
                 </ul>
