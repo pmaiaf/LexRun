@@ -17,6 +17,7 @@ import ProcessoDetalhePage from './pages/ProcessoDetalhePage.jsx'
 import ClientesPage       from './pages/ClientesPage.jsx'
 import AgendaPage         from './pages/AgendaPage.jsx'
 import PedidosPage        from './pages/PedidosPage.jsx'
+import CalculosPage       from './pages/CalculosPage.jsx'
 import FinanceiroPage     from './pages/FinanceiroPage.jsx'
 import PortalPage         from './pages/PortalPage.jsx'
 import PlanosPage         from './pages/PlanosPage.jsx'
@@ -126,6 +127,7 @@ export default function App() {
                 <Route path="clientes"           element={<ClientesPage />} />
                 <Route path="agenda"             element={<AgendaPage />} />
                 <Route path="pedidos"            element={<PedidosPage />} />
+                <Route path="calculos"           element={<CalculosPage />} />
                 <Route path="financeiro"         element={<FinanceiroPage />} />
                 <Route path="portal"             element={<PortalPage />} />
                 <Route path="relatorios"         element={<RelatoriosPage />} />

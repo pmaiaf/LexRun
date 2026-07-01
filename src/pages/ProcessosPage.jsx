@@ -148,7 +148,10 @@ export default function ProcessosPage() {
                       </td>
                       <td className={`px-4 ${padY} text-left text-gray-600 whitespace-nowrap`}>{p.cliente_nome || '—'}</td>
                       <td className={`px-4 ${padY} text-left whitespace-nowrap`}>{p.area ? <span className="badge badge-gray">{p.area}</span> : '—'}</td>
-                      <td className={`px-4 ${padY} text-left whitespace-nowrap`}><span className={`badge ${statusClass(p.status)}`}>{p.status}</span></td>
+                      <td className={`px-4 ${padY} text-left whitespace-nowrap`}>
+                        <span className={`badge ${statusClass(p.status)}`}>{p.status}</span>
+                        {p.ativo === false && <span className="badge badge-gray ml-1">Inativo</span>}
+                      </td>
                       <td className={`px-4 ${padY} text-left whitespace-nowrap`}>
                         {p.prazo ? <div className="flex items-center gap-1.5"><span className="text-gray-600 text-xs">{formatDate(p.prazo)}</span><span className={`badge ${pCls}`}>{pLabel}</span></div> : '—'}
                       </td>

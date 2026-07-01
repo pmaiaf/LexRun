@@ -1,11 +1,13 @@
 import { useState, useEffect, useRef } from 'react'
 import { Outlet, NavLink, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext.jsx'
+import OabSyncModal from '../OabSyncModal.jsx'
+import { oabService } from '../../services/api.js'
 import {
   LayoutDashboard, Columns, FileText, Calendar,
   BarChart2, Users, CreditCard, Settings, Bell,
   Search, LogOut, BarChart, UserSquare2, AlertTriangle, Clock, DollarSign,
-  Menu, X, Sparkles
+  Menu, X, Sparkles, Calculator
 } from 'lucide-react'
 import { avatarInitials, formatDate } from '../../utils/helpers.js'
 import { useApi } from '../../hooks/useApi.js'
@@ -24,6 +26,7 @@ const NAV_SECTIONS = [
     label: 'Produtividade',
     items: [
       { label: 'Pedidos',     to: '/pedidos',      icon: Sparkles },
+      { label: 'Cálculos',    to: '/calculos',     icon: Calculator },
       { label: 'Kanban',      to: '/kanban',       icon: Columns  },
       { label: 'Processos',   to: '/processos',    icon: FileText },
       { label: 'Clientes',    to: '/clientes',     icon: UserSquare2 },
@@ -49,6 +52,11 @@ const NAV_SECTIONS = [
 
 export default function AppLayout() {
   const { user, logout } = useAuth()
+  const [precisaOab, setPrecisaOab] = useState(false)
+  useEffect(() => {
+    if (!user || !['socio', 'associado'].includes(user.cargo)) return
+    oabService.status().then(r => setPrecisaOab(!!r.precisa_oab)).catch(() => {})
+  }, [user])
   const navigate = useNavigate()
   const [notifAberta, setNotifAberta] = useState(false)
   const [sidebarAberta, setSidebarAberta] = useState(false)
@@ -215,6 +223,7 @@ export default function AppLayout() {
           <Outlet />
         </main>
       </div>
+      {precisaOab && <OabSyncModal onConcluir={() => setPrecisaOab(false)} />}
     </div>
   )
 }

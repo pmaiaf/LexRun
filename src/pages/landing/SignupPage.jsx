@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Scale, ArrowRight, ArrowLeft, Check, Loader2 } from 'lucide-react'
-import lexrunLogo from '../../assets/lexrun-logo.png'
+import lexrunLogo from '../../assets/lexrun-logo-nova.png'
 import { useApi } from '../../hooks/useApi.js'
 import { assinaturaService, cadastroService } from '../../services/api.js'
 
@@ -16,7 +16,7 @@ export default function SignupPage() {
   const { data: planos } = useApi(() => assinaturaService.planos(), [])
 
   const [etapa, setEtapa] = useState(1)
-  const [form, setForm] = useState({ nomeEscritorio: '', nome: '', email: '', oab: '', plano: '' })
+  const [form, setForm] = useState({ nomeEscritorio: '', nome: '', email: '', plano: '' })
   const [aceitouTermos, setAceitouTermos] = useState(false)
   const [erro, setErro] = useState('')
   const [enviando, setEnviando] = useState(false)
@@ -100,12 +100,6 @@ export default function SignupPage() {
                   value={form.email} onChange={e => set('email', e.target.value)} placeholder="voce@escritorio.adv.br" required/>
                 <p className="text-[11px] text-brand-900/40 mt-1">Seus dados de acesso serão enviados para este e-mail após a confirmação do pagamento.</p>
               </div>
-              <div>
-                <label className="block text-sm text-brand-900/65 mb-2">OAB (opcional)</label>
-                <input className="w-full border border-brand-900/10 rounded-lg px-4 py-3 text-base outline-none focus:border-accent-500"
-                  value={form.oab} onChange={e => set('oab', e.target.value)} placeholder="Ex: 123456/MG"/>
-              </div>
-
               <button type="submit" className="w-full bg-brand-900 text-white py-3.5 rounded-xl text-base font-medium hover:bg-brand-700 transition-colors flex items-center justify-center gap-2 mt-2">
                 Continuar para o plano <ArrowRight size={14}/>
               </button>

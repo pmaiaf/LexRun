@@ -203,6 +203,19 @@ async function portalRequest(path, options = {}) {
   return data
 }
 
+export const oabService = {
+  status:      ()          => api.get('/oab/status'),
+  sincronizar: (oab, uf)   => api.post('/oab/sincronizar', { oab, uf }),
+}
+
+export const calculosService = {
+  listar:     ()              => api.get('/calculos'),
+  tipos:      (area, subArea) => api.get(`/calculos/tipos?area=${encodeURIComponent(area || '')}&subArea=${encodeURIComponent(subArea || '')}`),
+  estruturar: (payload)       => api.post('/calculos/estruturar', payload),
+  criar:      (payload)       => api.post('/calculos', payload),
+  calcular:   (id, estrutura) => api.post(`/calculos/${id}/calcular`, estrutura ? { estrutura } : {}),
+}
+
 async function portalUpload(path, formData) {
   const token = getPortalToken()
   const res = await fetch(`${BASE_URL}${path}`, {
