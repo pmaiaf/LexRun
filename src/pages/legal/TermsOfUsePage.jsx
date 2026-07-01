@@ -2,11 +2,12 @@ import LegalLayout from './LegalLayout.jsx'
 
 export default function TermsOfUsePage() {
   return (
-    <LegalLayout titulo="Termos de Uso" atualizadoEm="17 de junho de 2026">
+    <LegalLayout titulo="Termos de Uso" atualizadoEm="1 de julho de 2026">
       <p>
         Estes Termos de Uso regulam o acesso e a utilização da plataforma LexRun
-        ("Plataforma", "Sistema" ou "LexRun"), disponibilizada pela <strong>LexRun</strong>{' '}
-        ("LexRun", "nós"). Ao criar uma conta ou
+        ("Plataforma", "Sistema" ou "LexRun"), disponibilizada por{' '}
+        <strong>RDPZ TECNOLOGIA LTDA</strong>, inscrita no CNPJ sob o nº{' '}
+        <strong>56.423.094/0001-66</strong> ("LexRun", "nós"). Ao criar uma conta ou
         utilizar a Plataforma, você ("Usuário", "Cliente" ou "Escritório") declara que
         leu, compreendeu e aceita integralmente estes Termos.
       </p>

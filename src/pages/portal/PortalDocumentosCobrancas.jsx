@@ -27,7 +27,7 @@ export function PortalDocumentos() {
   if (error)    return <ErrorBlock message={error} onRetry={refetch} />
 
   return (
-    <div className="p-6">
+    <div className="p-6 md:p-8">
       <div className="mb-5">
         <h1 className="text-lg font-semibold text-gray-900">Documentos</h1>
         <p className="text-sm text-gray-500">{docs.length} documento{docs.length !== 1 ? 's' : ''} disponível{docs.length !== 1 ? 'is' : ''}</p>
@@ -94,7 +94,7 @@ export function PortalCobrancas() {
   if (error)   return <ErrorBlock message={error} onRetry={refetch} />
 
   return (
-    <div className="p-6 space-y-5">
+    <div className="p-6 md:p-8 space-y-6">
       <div>
         <h1 className="text-lg font-semibold text-gray-900">Cobranças</h1>
         <p className="text-sm text-gray-500">{lista.length} cobrança{lista.length !== 1 ? 's' : ''}</p>

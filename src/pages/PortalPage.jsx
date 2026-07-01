@@ -67,7 +67,7 @@ export default function PortalPage() {
   if (error)   return <ErrorBlock message={error} onRetry={refetch} />
 
   return (
-    <div className="p-6">
+    <div className="p-6 md:p-8">
       <div className="flex items-center justify-between mb-5">
         <div>
           <h1 className="text-lg font-semibold text-gray-900">Portal do Cliente</h1>

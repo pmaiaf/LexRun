@@ -129,7 +129,7 @@ export default function FinanceiroPage() {
   if (e1)          return <ErrorBlock message={e1} error={eo1} onRetry={r1} />
 
   return (
-    <div className="p-6 space-y-5">
+    <div className="p-6 md:p-8 space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-lg font-semibold text-gray-900">Financeiro</h1>

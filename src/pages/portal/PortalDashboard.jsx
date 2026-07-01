@@ -32,7 +32,7 @@ export default function PortalDashboard() {
   const valorPend= pendentes.reduce((a, c) => a + parseFloat(c.valor || 0), 0)
 
   return (
-    <div className="p-6 space-y-5">
+    <div className="p-6 md:p-8 space-y-6">
       {/* Boas-vindas */}
       <div className="bg-brand-800 rounded-2xl p-6 text-white">
         <p className="text-white/60 text-sm mb-1">Bem-vindo ao seu portal</p>

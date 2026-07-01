@@ -69,7 +69,7 @@ export default function DashboardPage() {
   const receita   = kpis?.receita_mensal || []
 
   return (
-    <div className="p-6 space-y-5">
+    <div className="p-6 md:p-8 space-y-6">
       <TourBoasVindas aberto={tourAberto} onFechar={fecharTour} />
 
       <div>
@@ -157,8 +157,8 @@ export default function DashboardPage() {
               <AreaChart data={receita} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
                 <defs>
                   <linearGradient id="gradReceita" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%"  stopColor="#1B2E4B" stopOpacity={0.12} />
-                    <stop offset="95%" stopColor="#1B2E4B" stopOpacity={0} />
+                    <stop offset="5%"  stopColor="#243D62" stopOpacity={0.14} />
+                    <stop offset="95%" stopColor="#243D62" stopOpacity={0} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
@@ -166,7 +166,7 @@ export default function DashboardPage() {
                 <YAxis tick={{ fontSize: 11, fill: '#9ca3af' }} axisLine={false} tickLine={false}
                   tickFormatter={v => `${(v/1000).toFixed(0)}k`} />
                 <Tooltip content={<CustomTooltip />} />
-                <Area type="monotone" dataKey="receita" name="Receita" stroke="#1B2E4B" strokeWidth={2} fill="url(#gradReceita)" />
+                <Area type="monotone" dataKey="receita" name="Receita" stroke="#243D62" strokeWidth={2} fill="url(#gradReceita)" />
               </AreaChart>
             </ResponsiveContainer>
           )}
@@ -182,7 +182,7 @@ export default function DashboardPage() {
             <div className="space-y-3">
               {eventos.slice(0, 4).map(ev => (
                 <div key={ev.id} className="flex gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-brand-100 flex items-center justify-center flex-shrink-0">
+                  <div className="w-8 h-8 rounded-lg bg-brand-50 flex items-center justify-center flex-shrink-0">
                     <Clock size={13} className="text-brand-700" />
                   </div>
                   <div className="min-w-0">

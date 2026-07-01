@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Plus, Search, X, ExternalLink, MoreVertical, Edit2, Trash2, AlignJustify, List, Star, Tag } from 'lucide-react'
+import { Plus, Search, X, ExternalLink, MoreVertical, Edit2, Trash2, AlignJustify, List, Star, Tag, Check } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useApi, useAction } from '../hooks/useApi.js'
 import { processosService, tagsService } from '../services/api.js'
@@ -26,6 +26,7 @@ export default function ProcessosPage() {
   const [tagsForm, setTagsForm] = useState([])
   const [compacto, setCompacto] = useState(false)
   const [menuAbertoId, setMenuAbertoId] = useState(null)
+  const [tagsDe, setTagsDe] = useState(null)   // processo cujas etiquetas estão sendo editadas
   const [saving, setSaving] = useState(false)
   const { execute: execDelete, loading: deleting } = useAction()
 
@@ -33,6 +34,18 @@ export default function ProcessosPage() {
 
   const params = Object.fromEntries(Object.entries({ status: filtros.status, area: filtros.area, busca: filtros.busca, tag_id: filtros.tag_id, limit: 100 }).filter(([,v]) => v))
   const { data, loading, error, refetch } = useApi(() => processosService.listar(params), [filtros.status, filtros.area, filtros.busca, filtros.tag_id])
+
+  async function toggleTagDe(tag) {
+    if (!tagsDe) return
+    const tem = (tagsDe.tags || []).some(t => t.id === tag.id)
+    try {
+      if (tem) await tagsService.removerDeProcesso(tagsDe.id, tag.id)
+      else     await tagsService.atribuirProcesso(tagsDe.id, tag.id)
+      const novas = tem ? (tagsDe.tags || []).filter(t => t.id !== tag.id) : [...(tagsDe.tags || []), tag]
+      setTagsDe({ ...tagsDe, tags: novas })
+      refetch()
+    } catch (e) { toast.error(e.message) }
+  }
   const processos = data?.data || []
 
   async function toggleImportante(p, e) {
@@ -68,7 +81,7 @@ export default function ProcessosPage() {
   const padY = compacto ? 'py-1.5' : 'py-3'
 
   return (
-    <div className="p-6">
+    <div className="p-6 md:p-8">
       <DicaDaTela chave="processos" titulo="Esta é a tela de Processos">Aqui você cadastra e acompanha todos os processos do escritório. Clique em "Novo processo" para começar. Informe o número CNJ para sincronizar movimentações com os tribunais automaticamente.</DicaDaTela>
       <div className="flex items-center justify-between mb-5">
         <div>
@@ -170,6 +183,10 @@ export default function ProcessosPage() {
                                 className="w-full flex items-center gap-2 px-3 py-2 text-xs text-gray-700 hover:bg-gray-50 text-left">
                                 <Edit2 size={12}/> Ver / editar
                               </button>
+                              <button onClick={() => { setMenuAbertoId(null); setTagsDe(p) }}
+                                className="w-full flex items-center gap-2 px-3 py-2 text-xs text-gray-700 hover:bg-gray-50 text-left">
+                                <Tag size={12}/> Etiquetas
+                              </button>
                               <button onClick={() => { setMenuAbertoId(null); setConfirmDelete(p) }}
                                 className="w-full flex items-center gap-2 px-3 py-2 text-xs text-red-600 hover:bg-red-50 text-left">
                                 <Trash2 size={12}/> Excluir
@@ -188,6 +205,26 @@ export default function ProcessosPage() {
       </div>
 
       {tagsModalOpen && <TagsManagerModal open={tagsModalOpen} onClose={() => setTagsModalOpen(false)} tags={todasTags || []} onChanged={refetchTags} />}
+
+      <Modal open={!!tagsDe} onClose={() => setTagsDe(null)} title="Etiquetas do processo" size="sm">
+        <p className="text-sm text-gray-500 mb-3 truncate">{tagsDe?.titulo}</p>
+        <div className="space-y-0.5 max-h-72 overflow-y-auto">
+          {(todasTags || []).map(tag => {
+            const marcada = (tagsDe?.tags || []).some(t => t.id === tag.id)
+            return (
+              <button key={tag.id} onClick={() => toggleTagDe(tag)}
+                className={`w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-left transition-colors ${marcada ? 'bg-brand-50' : 'hover:bg-gray-50'}`}>
+                <span className="w-3 h-3 rounded-full flex-shrink-0" style={{ background: tag.cor || '#9CA3AF' }} />
+                <span className="text-sm text-gray-700 flex-1">{tag.nome}</span>
+                {marcada && <Check size={15} className="text-brand-700" />}
+              </button>
+            )
+          })}
+          {(todasTags || []).length === 0 && (
+            <p className="text-xs text-gray-400 py-4 text-center">Nenhuma etiqueta criada ainda. Use o botão "Etiquetas" no topo da tela para criar.</p>
+          )}
+        </div>
+      </Modal>
 
       {/* Painel de detalhe */}
       {selected && (

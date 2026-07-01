@@ -354,7 +354,7 @@ export default function ConfiguracoesPage() {
       telefone:    perfil.telefone    || '',
       cep:         perfil.cep         || '',
       endereco:    perfil.endereco    || '',
-      cor_primaria:perfil.cor_primaria|| '#1B2E4B',
+      cor_primaria:perfil.cor_primaria|| '#0A1C3A',
       cor_acento:  perfil.cor_acento  || '#0EA5A0',
     })
     if (perfil.logo_url) setLogoPreview(perfil.logo_url)
@@ -440,7 +440,7 @@ export default function ConfiguracoesPage() {
   if (ep) return <ErrorBlock message={ep} onRetry={rp} />
 
   return (
-    <div className="p-6">
+    <div className="p-6 md:p-8">
       <div className="mb-5">
         <h1 className="text-lg font-semibold text-gray-900">Configurações</h1>
         <p className="text-sm text-gray-500">Personalize o sistema para o seu escritório</p>
@@ -554,14 +554,14 @@ export default function ConfiguracoesPage() {
                 <FormField label="Cor primária">
                   <div className="flex items-center gap-2">
                     <input
-                      type="color" value={form.cor_primaria||'#1B2E4B'}
+                      type="color" value={form.cor_primaria||'#0A1C3A'}
                       onChange={e=>setForm(f=>({...f,cor_primaria:e.target.value}))}
                       className="w-9 h-9 rounded-lg cursor-pointer border border-gray-200 p-0.5 bg-white"
                     />
                     <input
                       className="input font-mono text-xs" value={form.cor_primaria||''}
                       onChange={e=>setForm(f=>({...f,cor_primaria:e.target.value}))}
-                      maxLength={7} placeholder="#1B2E4B"
+                      maxLength={7} placeholder="#0A1C3A"
                     />
                   </div>
                 </FormField>
@@ -584,7 +584,7 @@ export default function ConfiguracoesPage() {
               {/* Preview */}
               <div className="p-4 rounded-xl border border-gray-100 bg-gray-50">
                 <p className="text-[10px] text-gray-400 uppercase tracking-wide mb-3">Pré-visualização do portal</p>
-                <div className="rounded-lg overflow-hidden border border-gray-200" style={{ background: form.cor_primaria || '#1B2E4B' }}>
+                <div className="rounded-lg overflow-hidden border border-gray-200" style={{ background: form.cor_primaria || '#0A1C3A' }}>
                   <div className="p-3 flex items-center gap-2.5">
                     {logoPreview
                       ? <img src={logoPreview} alt="Logo" className="h-7 object-contain" />

@@ -119,7 +119,7 @@ export default function AgendaPage() {
   if (error)   return <ErrorBlock message={error} onRetry={refetch} />
 
   return (
-    <div className="p-6">
+    <div className="p-6 md:p-8">
       <DicaDaTela chave="agenda" titulo="Esta é a sua Agenda">
         Registre audiências, prazos e reuniões. Vincule um evento a um cliente e marque "avisar o cliente
         por e-mail" para que ele seja notificado automaticamente sobre o compromisso.

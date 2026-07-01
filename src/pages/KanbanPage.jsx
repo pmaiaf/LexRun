@@ -64,7 +64,7 @@ export default function KanbanPage() {
   if (error && !data)   return <ErrorBlock message={error} onRetry={refetch} />
 
   return (
-    <div className="p-6">
+    <div className="p-6 md:p-8">
       <div className="flex flex-wrap items-center justify-between gap-3 mb-5">
         <div>
           <h1 className="text-xl font-semibold text-gray-900">Kanban</h1>

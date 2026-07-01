@@ -2,7 +2,7 @@ import LegalLayout from './LegalLayout.jsx'
 
 export default function RefundPolicyPage() {
   return (
-    <LegalLayout titulo="Política de Reembolso" atualizadoEm="17 de junho de 2026">
+    <LegalLayout titulo="Política de Reembolso" atualizadoEm="1 de julho de 2026">
       <p>
         Esta Política de Reembolso se aplica a todas as assinaturas da plataforma LexRun
         contratadas por meio do site ou da própria Plataforma, em conformidade com o

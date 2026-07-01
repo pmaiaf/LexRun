@@ -67,7 +67,7 @@ export default function PlanosPage() {
   const pertoDoLimiteIA = usoIA?.limite_mensal && !usoIA?.tem_chave_propria && usoIA.geracoes_usadas_mes >= usoIA.limite_mensal * 0.8
 
   return (
-    <div className="p-6">
+    <div className="p-6 md:p-8">
       <div className="mb-6 text-center">
         <h1 className="text-lg font-semibold text-gray-900">Planos & Assinatura</h1>
         <p className="text-sm text-gray-500 mt-1">Escolha o plano ideal para o seu escritório. Cancele quando quiser.</p>

@@ -9,22 +9,19 @@ import { useApi } from '../../hooks/useApi.js'
 import { assinaturaService } from '../../services/api.js'
 import { FEATURES_POR_PLANO, PUBLICO_POR_PLANO } from '../../data/planos.js'
 import { MockupKanbanPro, MockupPortal, MockupRelatorios } from './LandingMockupsPro.jsx'
+import lexrunLogo from '../../assets/lexrun-logo.png'
 
 /* ------------------------------------------------------------------ *
  *  Selo LexRun — substitui a logo PNG (sem dependência de imagem).
  * ------------------------------------------------------------------ */
-function LexRunSeal({ size = 34, light = false }) {
+
+function LexRunSeal({ className = "h-24 w-auto" }) {
   return (
-    <span className="inline-flex items-center gap-2.5">
-      <svg width={size} height={size} viewBox="0 0 40 40" fill="none">
-        <rect width="40" height="40" rx="11" fill="#0a1c3a" />
-        <path d="M11 13l7 7-7 7" stroke="#d4af37" strokeWidth="3" fill="none" strokeLinecap="round" strokeLinejoin="round" />
-        <path d="M19 13l7 7-7 7" stroke="#d4af37" strokeWidth="3" fill="none" strokeLinecap="round" strokeLinejoin="round" opacity="0.45" />
-      </svg>
-      <span className="font-display font-semibold tracking-tight" style={{ fontSize: Math.round(size * 0.6), color: light ? '#fff' : '#0a1c3a' }}>
-        Lex<span style={{ color: light ? '#d4af37' : '#b3892f' }}>Run</span>
-      </span>
-    </span>
+    <img
+      src={lexrunLogo}
+      alt="LexRun"
+      className={`object-contain block ${className}`}
+    />
   )
 }
 

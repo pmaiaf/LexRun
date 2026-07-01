@@ -232,7 +232,7 @@ export default function PedidosPage() {
   })
 
   return (
-    <div className="p-6">
+    <div className="p-6 md:p-8">
       <div className="max-w-5xl mx-auto">
         <div className="flex flex-wrap items-center justify-between gap-3 mb-5">
           <div>

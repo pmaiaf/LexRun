@@ -517,7 +517,7 @@ export default function ProcessoDetalhePage() {
   const { label: prazoLbl, class: prazoCls } = prazoLabel(processo.prazo)
 
   return (
-    <div className="p-6 max-w-5xl mx-auto">
+    <div className="p-6 md:p-8 max-w-5xl mx-auto">
       {/* Voltar */}
       <button onClick={() => navigate('/processos')}
         className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-800 mb-4 transition-colors">
@@ -537,7 +537,8 @@ export default function ProcessoDetalhePage() {
             {processo.numero && <p className="text-sm font-mono text-gray-400 mt-0.5">{processo.numero}</p>}
             <div className="flex items-center gap-1.5 mt-2 flex-wrap">
               <TagBadges tags={processo.tags || []} size="sm" />
-              <TagPicker todasTags={todasTags || []} tagsAtuais={processo.tags || []} onToggle={toggleTag} />
+              <TagPicker todasTags={todasTags || []} tagsAtuais={processo.tags || []} onToggle={toggleTag}
+                trigger={<button type="button" className="btn-secondary text-xs py-1 px-2.5 flex items-center gap-1"><Tag size={12} /> Etiquetas</button>} />
             </div>
           </div>
           <div className="flex gap-2 flex-shrink-0">

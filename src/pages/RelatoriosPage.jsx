@@ -9,7 +9,7 @@ import { processosService, clientesService, financeiroService } from '../service
 import { LoadingScreen, ErrorBlock, useToast } from '../components/ui/index.jsx'
 import { formatCurrency } from '../utils/helpers.js'
 
-const CORES = ['#1B2E4B', '#0EA5A0', '#F59E0B', '#EF4444', '#8B5CF6', '#10B981']
+const CORES = ['#0A1C3A', '#0EA5A0', '#F59E0B', '#EF4444', '#8B5CF6', '#10B981']
 
 function KpiCard({ label, value, sub, icon: Icon, color }) {
   return (
@@ -58,18 +58,18 @@ async function exportPDF(titulo, dados, colunas) {
 
   const html = `
     <div style="font-family:Arial,sans-serif;color:#1a1a1a;padding:32px">
-      <div style="display:flex;align-items:center;gap:12px;margin-bottom:24px;border-bottom:2px solid #1B2E4B;padding-bottom:16px">
-        <div style="background:#1B2E4B;width:32px;height:32px;border-radius:6px;display:flex;align-items:center;justify-content:center">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:24px;border-bottom:2px solid #0A1C3A;padding-bottom:16px">
+        <div style="background:#0A1C3A;width:32px;height:32px;border-radius:6px;display:flex;align-items:center;justify-content:center">
           <span style="color:white;font-size:14px;font-weight:bold">J</span>
         </div>
         <div>
-          <h1 style="margin:0;font-size:18px;color:#1B2E4B">${titulo}</h1>
+          <h1 style="margin:0;font-size:18px;color:#0A1C3A">${titulo}</h1>
           <p style="margin:0;font-size:12px;color:#666">Gerado em ${new Date().toLocaleDateString('pt-BR', {dateStyle:'full'})} · LexRun</p>
         </div>
       </div>
       <style>
         table{width:100%;border-collapse:collapse;font-size:11px;margin-top:16px}
-        th{background:#1B2E4B;color:white;padding:7px 10px;text-align:left;font-weight:600}
+        th{background:#0A1C3A;color:white;padding:7px 10px;text-align:left;font-weight:600}
         td{padding:6px 10px;border-bottom:1px solid #eee;vertical-align:top}
         tr:nth-child(even) td{background:#f7f9fc}
       </style>
@@ -160,7 +160,7 @@ export default function RelatoriosPage() {
   }))
 
   return (
-    <div className="p-6 space-y-5">
+    <div className="p-6 md:p-8 space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-lg font-semibold text-gray-900">Relatórios</h1>
@@ -229,7 +229,7 @@ export default function RelatoriosPage() {
                 <XAxis type="number" tick={{ fontSize: 11, fill: '#9ca3af' }} axisLine={false} tickLine={false} />
                 <YAxis type="category" dataKey="name" tick={{ fontSize: 11, fill: '#6b7280' }} axisLine={false} tickLine={false} width={80} />
                 <Tooltip cursor={{ fill: '#f9fafb' }} contentStyle={{ fontSize: 12, borderRadius: 8, border: '1px solid #f0f0f0' }} />
-                <Bar dataKey="value" name="Processos" fill="#1B2E4B" radius={[0, 3, 3, 0]} />
+                <Bar dataKey="value" name="Processos" fill="#0A1C3A" radius={[0, 3, 3, 0]} />
               </BarChart>
             </ResponsiveContainer>
           )}
@@ -254,7 +254,7 @@ export default function RelatoriosPage() {
               <XAxis dataKey="mes" tick={{ fontSize: 11, fill: '#9ca3af' }} axisLine={false} tickLine={false} />
               <YAxis tick={{ fontSize: 11, fill: '#9ca3af' }} axisLine={false} tickLine={false} tickFormatter={v => `${(v/1000).toFixed(0)}k`} />
               <Tooltip formatter={v => formatCurrency(v)} contentStyle={{ fontSize: 12, borderRadius: 8, border: '1px solid #f0f0f0' }} />
-              <Line type="monotone" dataKey="receita"  name="Receita"  stroke="#1B2E4B" strokeWidth={2} dot={{ r: 3 }} />
+              <Line type="monotone" dataKey="receita"  name="Receita"  stroke="#0A1C3A" strokeWidth={2} dot={{ r: 3 }} />
               <Line type="monotone" dataKey="pendente" name="Pendente" stroke="#EF4444" strokeWidth={2} dot={{ r: 3 }} strokeDasharray="4 2" />
             </LineChart>
           </ResponsiveContainer>

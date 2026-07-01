@@ -8,7 +8,7 @@ const UFS = ['AC','AL','AP','AM','BA','CE','DF','ES','GO','MA','MT','MS','MG','P
  * Modal obrigatório de OAB (primeiro acesso). Bloqueia até o advogado informar
  * a OAB e sincronizar. Depois de disparar, acompanha o progresso por polling.
  */
-export default function OabSyncModal({ onConcluir }) {
+export default function OabSyncModal({ onConcluir, onPular }) {
   const [oab, setOab] = useState('')
   const [uf, setUf] = useState('')
   const [fase, setFase] = useState('form') // form | sincronizando | concluido | erro
@@ -72,7 +72,10 @@ export default function OabSyncModal({ onConcluir }) {
             <button onClick={sincronizar} className="btn-primary w-full mt-3 flex items-center justify-center gap-2">
               <RefreshCw size={15} /> Sincronizar processos
             </button>
-            <p className="text-[11px] text-gray-400 text-center mt-3">A OAB é obrigatória para usar o sistema.</p>
+            <button onClick={() => (onPular || onConcluir)()} className="btn-ghost w-full text-sm mt-2 text-gray-500">
+              Pular agora
+            </button>
+            <p className="text-[11px] text-gray-400 text-center mt-2">Você pode vincular a OAB depois, quando quiser sincronizar seus processos.</p>
           </>
         )}
 

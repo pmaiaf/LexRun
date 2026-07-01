@@ -2,10 +2,10 @@ import LegalLayout from './LegalLayout.jsx'
 
 export default function PrivacyPolicyPage() {
   return (
-    <LegalLayout titulo="Política de Privacidade" atualizadoEm="17 de junho de 2026">
+    <LegalLayout titulo="Política de Privacidade" atualizadoEm="1 de julho de 2026">
       <p>
-        Esta Política de Privacidade descreve como a <strong>LexRun</strong>{' '}
-        ("LexRun", "nós") coleta,
+        Esta Política de Privacidade descreve como a <strong>RDPZ TECNOLOGIA LTDA</strong>,
+        inscrita no CNPJ sob o nº <strong>56.423.094/0001-66</strong> ("LexRun", "nós"), coleta,
         utiliza, armazena e protege os dados pessoais tratados por meio da plataforma LexRun,
         em conformidade com a Lei Geral de Proteção de Dados (Lei nº 13.709/2018 — LGPD).
       </p>
