@@ -5,7 +5,7 @@ import {
   FileText, Loader2, CheckCircle2, AlertTriangle, X, Eye, Gift,
   ChevronLeft, ChevronRight, Paperclip, Image as ImageIcon, File as FileIcon,
 } from 'lucide-react'
-import { pedidosService } from '../services/api.js'
+import { pedidosService, calculosService } from '../services/api.js'
 import { useAuth } from '../contexts/AuthContext.jsx'
 import { useApi, useAction } from '../hooks/useApi.js'
 import {
@@ -15,6 +15,7 @@ import { formatDate } from '../utils/helpers.js'
 
 const TIPOS = [
   { value: 'peticao',   label: 'Petição' },
+  { value: 'calculo',   label: 'Cálculo' },
   { value: 'parecer',   label: 'Parecer' },
   { value: 'contrato',  label: 'Contrato' },
   { value: 'indicacao', label: 'Indicação de Petição' },
@@ -23,6 +24,10 @@ const TIPO_LABEL = Object.fromEntries(TIPOS.map(t => [t.value, t.label]))
 
 const AREAS = ['Trabalhista', 'Previdenciário', 'Criminal', 'Administrativo', 'Cível', 'Tributário', 'Ambiental', 'Eleitoral']
 const UFS = ['AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA', 'MT', 'MS', 'MG', 'PA', 'PB', 'PR', 'PE', 'PI', 'RJ', 'RN', 'RS', 'RO', 'RR', 'SC', 'SP', 'SE', 'TO']
+
+// Cálculo: mapeia área/subárea do wizard (com acento) para a chave do backend (sem acento).
+const CALC_AREA_MAP = { 'Previdenciário': 'Previdenciario', 'Cível': 'Civel', 'Trabalhista': 'Trabalhista', 'Administrativo': 'Administrativo', 'Criminal': 'Criminal' }
+const CALC_SUBAREA_MAP = { 'Obrigações': 'Obrigacoes', 'Sucessões': 'Sucessoes', 'Possessórias': 'Possessorias', 'Responsabilidade Civil': 'ResponsabilidadeCivil', 'Família': 'Familia', 'Imobiliário': 'Imobiliario' }
 
 // Subárea existe SOMENTE para Cível.
 const SUBAREAS = {
@@ -37,6 +42,7 @@ const PETICAO_GRATUITA_2N = ['Recursos', 'Contrarrazões']
 // Tipos de parte por serviço — sem "Outro". Lista dinâmica em todos.
 const PARTES = {
   peticao:   ['Autor', 'Réu'],
+  calculo:   ['Autor', 'Réu'],
   contrato:  ['Contratante', 'Contratada'],
   parecer:   ['Parte 01', 'Parte 02'],
   indicacao: ['Parte 01', 'Parte 02'],
@@ -85,6 +91,9 @@ function camposServico(tipo, campos) {
     }
     return f
   }
+  if (tipo === 'calculo') {
+    return [{ key: 'numero_processo', label: 'Já existe processo? Informe o número', type: 'text', placeholder: '0000000-00.0000.0.00.0000' }]
+  }
   if (tipo === 'contrato') {
     return [{ key: 'tipo_contrato', label: 'Tipo de contrato', type: 'select',
       options: ['Prestação de Serviços', 'Compra e Venda', 'Locação', 'Confidencialidade (NDA)', 'Sociedade', 'Honorários Advocatícios', 'Distrato'] }]
@@ -104,6 +113,13 @@ function camposCaso(tipo) {
         placeholder: 'Informe somente o tópico — a argumentação e fundamentação é por nossa conta.' },
       { key: 'tutela_urgencia', label: 'Será necessário requerer tutela de urgência?', type: 'radio', options: SIM_NAO },
       { key: 'reconvencao', label: 'Deseja pedido de reconvenção ou contraposto?', type: 'radio', options: SIM_NAO },
+      { bind: 'advogado_subscritor', label: 'Advogado subscritor', type: 'text', placeholder: 'Nome e OAB' },
+    ]
+  }
+  if (tipo === 'calculo') {
+    return [
+      { bind: 'descricao', label: 'Breve relato do caso', type: 'textarea', required: true,
+        placeholder: 'Descreva brevemente o caso e o que precisa ser calculado. Anexe o processo completo abaixo — nossa equipe extrai os dados e revisa o cálculo.' },
       { bind: 'advogado_subscritor', label: 'Advogado subscritor', type: 'text', placeholder: 'Nome e OAB' },
     ]
   }
@@ -443,7 +459,14 @@ function NovaSolicitacao({ open, onClose, rascunho, saldo, ehSocio, defaultAdvog
     return null
   }
   const podeAvancar = () => {
-    if (passo === 0) { const m = faltaObrig(fieldsServico); if (m) { toast.error(`Preencha: ${m}.`); return false } }
+    if (passo === 0) {
+      if (form.tipo_servico === 'calculo') {
+        if (!form.area) { toast.error('Selecione a área do cálculo.'); return false }
+        if (form.area === 'Cível' && !form.sub_area) { toast.error('Selecione a subárea (Cível).'); return false }
+        if (!campos.tipo_calculo) { toast.error('Selecione o tipo de cálculo.'); return false }
+      }
+      const m = faltaObrig(fieldsServico); if (m) { toast.error(`Preencha: ${m}.`); return false }
+    }
     if (passo === 2) { const m = faltaObrig(fieldsCaso); if (m) { toast.error(`Preencha: ${m}.`); return false } }
     return true
   }
@@ -492,12 +515,23 @@ function NovaSolicitacao({ open, onClose, rascunho, saldo, ehSocio, defaultAdvog
 
             <SubareaField area={form.area} value={form.sub_area} onChange={v => set('sub_area', v)} />
 
+            {form.tipo_servico === 'calculo' && (
+              <TipoCalculoField area={form.area} subArea={form.sub_area} value={campos.tipo_calculo} onChange={v => setCampo('tipo_calculo', v)} />
+            )}
+
             <div>
               <label className="text-sm font-medium text-gray-700 mb-1.5 block">Serviços adicionais</label>
-              <label className="flex items-center gap-2 text-sm text-gray-400 cursor-not-allowed select-none">
-                <input type="checkbox" disabled className="accent-brand-700" />
-                Cálculo <span className="text-[10px] bg-gray-100 text-gray-500 rounded px-1.5 py-0.5">em breve</span>
-              </label>
+              {form.tipo_servico === 'calculo' ? (
+                <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer select-none">
+                  <input type="checkbox" checked={!!form.incluir_peticao} onChange={e => set('incluir_peticao', e.target.checked)} className="accent-brand-700" />
+                  Incluir Petição junto com o cálculo
+                </label>
+              ) : (
+                <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer select-none">
+                  <input type="checkbox" checked={!!form.incluir_calculo} onChange={e => set('incluir_calculo', e.target.checked)} className="accent-brand-700" />
+                  Incluir Cálculo junto
+                </label>
+              )}
             </div>
 
             {fieldsServico.map(f => f.type === 'cidade'
@@ -682,6 +716,25 @@ function AnexoRow({ nome, mime, pendente, onRemove }) {
 }
 
 // Subárea: SOMENTE Cível, sem "Outra".
+function TipoCalculoField({ area, subArea, value, onChange }) {
+  const areaKey = CALC_AREA_MAP[area] || area || ''
+  const subKey = CALC_SUBAREA_MAP[subArea] || subArea || ''
+  const precisaSub = areaKey === 'Civel'
+  const { data, loading } = useApi(
+    () => (areaKey && (!precisaSub || subKey) ? calculosService.tipos(areaKey, subKey) : Promise.resolve({ tipos: [] })),
+    [areaKey, subKey]
+  )
+  const tipos = data?.tipos || []
+  return (
+    <FormField label="Tipo de cálculo" required>
+      <select className="input" value={value || ''} onChange={e => onChange(e.target.value)} disabled={loading}>
+        <option value="">{!areaKey ? 'Selecione a área primeiro…' : (precisaSub && !subKey ? 'Selecione a subárea…' : 'Selecione…')}</option>
+        {tipos.map(t => <option key={t.tipo} value={t.tipo} disabled={!t.ativo}>{t.tipo}{t.ativo ? '' : ' (em breve)'}</option>)}
+      </select>
+    </FormField>
+  )
+}
+
 function SubareaField({ area, value, onChange }) {
   const opts = SUBAREAS[area]
   if (!opts) return null
