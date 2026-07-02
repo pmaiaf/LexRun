@@ -460,8 +460,8 @@ function NovaSolicitacao({ open, onClose, rascunho, saldo, ehSocio, defaultAdvog
   }
   const podeAvancar = () => {
     if (passo === 0) {
-      if (form.tipo_servico === 'calculo') {
-        if (!form.area) { toast.error('Selecione a área do cálculo.'); return false }
+      if (form.tipo_servico === 'calculo' || form.incluir_calculo) {
+        if (!form.area) { toast.error('Selecione a área do Direito.'); return false }
         if (form.area === 'Cível' && !form.sub_area) { toast.error('Selecione a subárea (Cível).'); return false }
         if (!campos.tipo_calculo) { toast.error('Selecione o tipo de cálculo.'); return false }
       }
@@ -515,10 +515,6 @@ function NovaSolicitacao({ open, onClose, rascunho, saldo, ehSocio, defaultAdvog
 
             <SubareaField area={form.area} value={form.sub_area} onChange={v => set('sub_area', v)} />
 
-            {form.tipo_servico === 'calculo' && (
-              <TipoCalculoField area={form.area} subArea={form.sub_area} value={campos.tipo_calculo} onChange={v => setCampo('tipo_calculo', v)} />
-            )}
-
             <div>
               <label className="text-sm font-medium text-gray-700 mb-1.5 block">Serviços adicionais</label>
               {form.tipo_servico === 'calculo' ? (
@@ -533,6 +529,10 @@ function NovaSolicitacao({ open, onClose, rascunho, saldo, ehSocio, defaultAdvog
                 </label>
               )}
             </div>
+
+            {(form.tipo_servico === 'calculo' || form.incluir_calculo) && (
+              <TipoCalculoField area={form.area} subArea={form.sub_area} value={campos.tipo_calculo} onChange={v => setCampo('tipo_calculo', v)} />
+            )}
 
             {fieldsServico.map(f => f.type === 'cidade'
               ? <CidadeField key={f.key} uf={campos.comarca_uf} value={campos.comarca_cidade || ''} onChange={v => setCampo('comarca_cidade', v)} />

@@ -26,7 +26,6 @@ const NAV_SECTIONS = [
     label: 'Produtividade',
     items: [
       { label: 'Pedidos',     to: '/pedidos',      icon: Sparkles },
-      { label: 'Cálculos',    to: '/calculos',     icon: Calculator },
       { label: 'Kanban',      to: '/kanban',       icon: Columns  },
       { label: 'Processos',   to: '/processos',    icon: FileText },
       { label: 'Clientes',    to: '/clientes',     icon: UserSquare2 },
