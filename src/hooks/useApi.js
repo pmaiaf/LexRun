@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 // ── Fila global para evitar "muitas requisições" simultâneas ──────────────────
 const queue = []
 let running = 0
-const MAX_CONCURRENT = 2   // máximo de requests simultâneas (conservador para evitar 429)
+const MAX_CONCURRENT = 5   // 2 serializava o carregamento (páginas lentas); 5 equilibra velocidade e proteção
 
 function enqueue(fn) {
   return new Promise((resolve, reject) => {
