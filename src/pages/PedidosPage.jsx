@@ -23,6 +23,8 @@ const TIPOS = [
 const TIPO_LABEL = Object.fromEntries(TIPOS.map(t => [t.value, t.label]))
 
 const AREAS = ['Trabalhista', 'Previdenciário', 'Criminal', 'Administrativo', 'Cível', 'Tributário', 'Ambiental', 'Eleitoral']
+// Áreas que possuem cálculo no sistema (para não oferecer becos sem saída quando há cálculo).
+const AREAS_CALCULO = ['Trabalhista', 'Previdenciário', 'Criminal', 'Administrativo', 'Cível']
 const UFS = ['AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA', 'MT', 'MS', 'MG', 'PA', 'PB', 'PR', 'PE', 'PI', 'RJ', 'RN', 'RS', 'RO', 'RR', 'SC', 'SP', 'SE', 'TO']
 
 // Cálculo: mapeia área/subárea do wizard (com acento) para a chave do backend (sem acento).
@@ -508,7 +510,7 @@ function NovaSolicitacao({ open, onClose, rascunho, saldo, ehSocio, defaultAdvog
               <FormField label="Área do Direito">
                 <select className="input" value={form.area} onChange={e => set('area', e.target.value)}>
                   <option value="">Selecione…</option>
-                  {AREAS.map(a => <option key={a} value={a}>{a}</option>)}
+                  {(form.tipo_servico === 'calculo' || form.incluir_calculo ? AREAS_CALCULO : AREAS).map(a => <option key={a} value={a}>{a}</option>)}
                 </select>
               </FormField>
             </div>

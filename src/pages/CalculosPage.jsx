@@ -121,6 +121,14 @@ function Editor({ calculo, onVoltar }) {
   const [feriasVencidas, setFeriasVencidas] = useState(est.feriasVencidas || false)
   const [saldoFGTS, setSaldoFGTS] = useState(est.saldoFGTS ?? '')
   const [verbasTrab, setVerbasTrab] = useState(est.verbas?.length ? est.verbas : [{ descricao: '', valorBase: '', dataInicio: '', incideINSS: true, incideFGTS: true }])
+  const [epInicio, setEpInicio] = useState(est.dataInicio ?? '')
+  const [epAnos, setEpAnos] = useState(est.penaAnos ?? '')
+  const [epMeses, setEpMeses] = useState(est.penaMeses ?? '')
+  const [epDias, setEpDias] = useState(est.penaDias ?? '')
+  const [epNatureza, setEpNatureza] = useState(est.natureza ?? 'comum')
+  const [epReincidente, setEpReincidente] = useState(est.reincidente ?? false)
+  const [epDetracao, setEpDetracao] = useState(est.diasDetracao ?? '')
+  const [epRemicao, setEpRemicao] = useState(est.diasRemicao ?? '')
   const [resultado, setResultado] = useState(calculo?.resultado || null)
   const [idCalc, setIdCalc] = useState(calculo?.id || null)
 
@@ -135,7 +143,8 @@ function Editor({ calculo, onVoltar }) {
   const ehDiferenca = /fgts|pis[\/ ]?pasep|plano de sa[uú]de/i.test(tipo)
   const ehPartilha = /partilha|invent[aá]rio/i.test(tipo)
   const ehRescisao = /rescis[aã]o de contrato de trabalho/i.test(tipo)
-  const ehLiquidacaoTrab = /liquida[çc][aã]o de verbas trabalhistas/i.test(tipo)
+  const ehExecucaoPenal = /execu[çc][aã]o penal/i.test(tipo)
+  const ehLiquidacaoTrab = /liquida[çc][aã]o de verbas trabalhistas/i.test(tipo) || (/impugna[çc][aã]o/i.test(tipo) && area === 'Trabalhista')
   const ehRevisional = /revisional/i.test(tipo) && !ehAluguel && !ehDiferenca
 
   // carrega os tipos da área/subárea
@@ -148,6 +157,9 @@ function Editor({ calculo, onVoltar }) {
     setParcelas(ps => ps.map((p, idx) => idx === i ? { ...p, [campo]: val } : p))
   }
   function montarEstrutura() {
+    if (ehExecucaoPenal) {
+      return { dataInicio: epInicio, penaAnos: Number(epAnos) || 0, penaMeses: Number(epMeses) || 0, penaDias: Number(epDias) || 0, natureza: epNatureza, reincidente: epReincidente, diasDetracao: Number(epDetracao) || 0, diasRemicao: Number(epRemicao) || 0 }
+    }
     if (ehRescisao) {
       return { salario: Number(salarioResc), dataAdmissao: admissao, dataDemissao: demissao, diasTrabalhadosMes: Number(diasTrabMes) || 30, feriasVencidas, saldoFGTS: Number(saldoFGTS) || 0 }
     }
@@ -214,7 +226,9 @@ function Editor({ calculo, onVoltar }) {
 
   async function calcular() {
     const estrutura = montarEstrutura()
-    if (ehRescisao) {
+    if (ehExecucaoPenal) {
+      if (!estrutura.dataInicio || !(estrutura.penaAnos || estrutura.penaMeses || estrutura.penaDias)) return toast.error('Informe a data de início e a pena.')
+    } else if (ehRescisao) {
       if (!estrutura.salario || !estrutura.dataAdmissao || !estrutura.dataDemissao) return toast.error('Informe salário e datas de admissão/demissão (AAAA-MM).')
     } else if (ehLiquidacaoTrab) {
       if (!estrutura.verbas.length) return toast.error('Adicione ao menos uma verba (valor + data).')
@@ -291,7 +305,7 @@ function Editor({ calculo, onVoltar }) {
       </div>
 
       {/* Datas */}
-      {!ehRevisional && !ehAluguel && !ehDiferenca && !ehPartilha && !ehRescisao && <div className="card p-5 mb-4">
+      {!ehRevisional && !ehAluguel && !ehDiferenca && !ehPartilha && !ehRescisao && !ehExecucaoPenal && <div className="card p-5 mb-4">
         <p className="text-sm font-medium text-gray-800 mb-3">Datas do processo</p>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <FormField label="Ajuizamento (AAAA-MM)"><input className="input" placeholder="2024-04" value={dataAjuizamento} onChange={e => setDataAjuizamento(e.target.value)} /></FormField>
@@ -356,6 +370,32 @@ function Editor({ calculo, onVoltar }) {
                 <button onClick={() => setVerbasTrab(vs => vs.filter((_, idx) => idx !== i))} className="btn-ghost p-1.5 text-red-500 col-span-1"><Trash2 size={13} /></button>
               </div>
             ))}
+          </div>
+        </div>
+      )}
+
+      {/* Execução Penal */}
+      {ehExecucaoPenal && (
+        <div className="card p-5 mb-4">
+          <p className="text-sm font-medium text-gray-800 mb-1">Dados da execução penal</p>
+          <p className="text-xs text-gray-400 mb-3">Marcos pela Lei 13.964/2019. Detração e remição abatem dias. Estimativa para revisão do especialista.</p>
+          <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+            <FormField label="Início do cumprimento"><input className="input" type="date" value={epInicio} onChange={e => setEpInicio(e.target.value)} /></FormField>
+            <FormField label="Pena — anos"><input className="input" type="number" value={epAnos} onChange={e => setEpAnos(e.target.value)} /></FormField>
+            <FormField label="Meses"><input className="input" type="number" value={epMeses} onChange={e => setEpMeses(e.target.value)} /></FormField>
+            <FormField label="Dias"><input className="input" type="number" value={epDias} onChange={e => setEpDias(e.target.value)} /></FormField>
+            <FormField label="Natureza do crime">
+              <select className="input" value={epNatureza} onChange={e => setEpNatureza(e.target.value)}>
+                <option value="comum">Comum (sem violência)</option>
+                <option value="violencia">Com violência/grave ameaça</option>
+                <option value="hediondo">Hediondo/equiparado</option>
+              </select>
+            </FormField>
+            <FormField label="Detração (dias já presos)"><input className="input" type="number" value={epDetracao} onChange={e => setEpDetracao(e.target.value)} /></FormField>
+            <FormField label="Remição (dias remidos)"><input className="input" type="number" value={epRemicao} onChange={e => setEpRemicao(e.target.value)} /></FormField>
+            <FormField label="Reincidente?">
+              <label className="flex items-center gap-2 text-sm text-gray-700 h-[42px]"><input type="checkbox" checked={epReincidente} onChange={e => setEpReincidente(e.target.checked)} /> Sim</label>
+            </FormField>
           </div>
         </div>
       )}
@@ -458,7 +498,7 @@ function Editor({ calculo, onVoltar }) {
       )}
 
       {/* Estruturar com IA (opcional) */}
-      {!ehRevisional && !ehAluguel && !ehDiferenca && !ehPartilha && !ehRescisao && !ehLiquidacaoTrab && <div className="card p-5 mb-4">
+      {!ehRevisional && !ehAluguel && !ehDiferenca && !ehPartilha && !ehRescisao && !ehLiquidacaoTrab && !ehExecucaoPenal && <div className="card p-5 mb-4">
         <div className="flex items-center justify-between mb-2">
           <p className="text-sm font-medium text-gray-800">Estruturar com IA <span className="text-gray-400 font-normal">(opcional)</span></p>
           <button onClick={estruturarIA} disabled={estruturando || !tipo}
@@ -471,7 +511,7 @@ function Editor({ calculo, onVoltar }) {
       </div>}
 
       {/* Parcelas (revisáveis) */}
-      {!ehRevisional && !ehAluguel && !ehDiferenca && !ehPartilha && !ehRescisao && !ehLiquidacaoTrab && <div className="card p-5 mb-4">
+      {!ehRevisional && !ehAluguel && !ehDiferenca && !ehPartilha && !ehRescisao && !ehLiquidacaoTrab && !ehExecucaoPenal && <div className="card p-5 mb-4">
         <div className="flex items-center justify-between mb-3">
           <p className="text-sm font-medium text-gray-800">Parcelas</p>
           <button onClick={() => setParcelas(ps => [...ps, novaParcela()])} className="btn-ghost text-xs flex items-center gap-1"><Plus size={13} /> Adicionar parcela</button>
@@ -533,7 +573,19 @@ function Memorial({ resultado }) {
         </div>
       )}
 
-      {resultado.rescisao ? (
+      {resultado.execucaoPenal ? (
+        <>
+          <div className="space-y-2 mb-4">
+            {resultado.execucaoPenal.marcos.map((m, i) => (
+              <div key={i} className="flex justify-between items-center p-3 rounded-xl bg-brand-50">
+                <span className="text-sm text-gray-700">{m.descricao}</span>
+                <span className="text-sm font-semibold text-brand-800">{new Date(m.data + 'T00:00:00').toLocaleDateString('pt-BR')}</span>
+              </div>
+            ))}
+          </div>
+          <p className="text-xs text-gray-400">Pena total: {resultado.execucaoPenal.penaTotalDias} dias · crédito (detração + remição): {resultado.execucaoPenal.creditoDias} dias. Estimativa — confira faltas graves, remição contínua e unificação de penas.</p>
+        </>
+      ) : resultado.rescisao ? (
         <>
           <div className="grid grid-cols-3 gap-3 mb-4">
             <Box label="Total bruto" valor={resultado.totais.bruto} />
