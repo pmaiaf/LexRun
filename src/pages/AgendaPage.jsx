@@ -20,7 +20,7 @@ const TIPOS = ['Tarefa', 'Evento', 'Audiência', 'Prazo', 'Reunião', 'Outros']
 const MESES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro']
 const MESES_ABREV = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez']
 const DIAS_SEMANA = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb']
-const HORA_INI = 6, HORA_FIM = 22, ALTURA_HORA = 56 // px por hora nas visões dia/semana
+const HORA_INI = 6, HORA_FIM = 24, ALTURA_HORA = 56 // grade de 6h às 23h; px por hora nas visões dia/semana
 
 // ── helpers de data ──────────────────────────────────────────────────────────
 const pad = n => String(n).padStart(2, '0')
